@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEOINT DOSSIER: ANSAR ALLAH & RED SEA CRISIS</title>
+    
+    <!-- Leaflet CSS & FontAwesome Icons -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { 
+            width: 100%; 
+            height: 100%; 
+            font-family: 'Space Grotesk', sans-serif; 
+            overflow: hidden; 
+            background-color: #04070d; 
+            color: #e6edf3; 
+        }
+
+        #map { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
+
+        /* TOP PROGRESS BAR */
+        .progress-bar-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1001;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 7.69%;
+            background: linear-gradient(90deg, #00f0ff, #ff2a5f);
+            box-shadow: 0 0 12px #00f0ff;
+            transition: width 0.35s ease-out;
+        }
+
+        /* LIVE GPS TICKER */
+        .gps-ticker {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: rgba(6, 10, 18, 0.94);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 240, 255, 0.35);
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #00f0ff;
+            z-index: 1000;
+            letter-spacing: 1px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .gps-ticker .status-dot {
+            width: 9px;
+            height: 9px;
+            background-color: #00f0ff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00f0ff;
+            animation: blink 1.2s infinite alternate;
+        }
+        @keyframes blink { 0% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        /* INTEL OVERLAY CARD */
+        .info-card {
+            position: absolute;
+            top: 24px;
+            left: 25px;
+            width: 530px;
+            max-height: 88vh;
+            background: rgba(4, 7, 13, 0.96);
+            backdrop-filter: blur(25px);
+            border: 1.5px solid rgba(0, 240, 255, 0.35);
+            border-top: 5px solid #ff2a5f;
+            border-radius: 8px;
+            padding: 22px;
+            z-index: 1000;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), inset 0 0 25px rgba(0, 240, 255, 0.04);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .info-card::-webkit-scrollbar { width: 5px; }
+        .info-card::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
+        .info-card::-webkit-scrollbar-thumb { background: #00f0ff; border-radius: 3px; }
+
+        .dossier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #00f0ff;
+            letter-spacing: 2px;
+            border-bottom: 1px dashed rgba(0, 240, 255, 0.3);
+            padding-bottom: 8px;
+        }
+        .status-tag { 
+            background: #ff2a5f; 
+            color: #ffffff; 
+            padding: 4px 10px; 
+            font-weight: 800; 
+            border-radius: 3px; 
+            letter-spacing: 1.5px;
+            font-size: 10px;
+        }
+
+        .phase-tag { 
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 12px; 
+            color: #ffb703; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            font-weight: 800;
+        }
+        .title { 
+            font-size: 22px; 
+            font-weight: 800; 
+            color: #ffffff; 
+            line-height: 1.25; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
+        .subtitle { 
+            font-size: 11.5px; 
+            color: #00f0ff; 
+            font-weight: 700; 
+            font-family: 'JetBrains Mono', monospace; 
+            letter-spacing: 1px;
+        }
+        
+        .video-container {
+            width: 100%;
+            height: 210px;
+            background: #000;
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.85);
+            display: none;
+        }
+        .video-container iframe { width: 100%; height: 100%; border: none; }
+
+        /* MODULAR INTEL BLOCKS */
+        .intel-block {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-left: 4px solid #00f0ff;
+            padding: 12px 14px;
+            border-radius: 5px;
+            font-size: 13.5px;
+            line-height: 1.55;
+            color: #e2e8f0;
+        }
+        .intel-block strong { color: #ffffff; font-weight: 800; }
+        .intel-block.warning { border-left-color: #ff2a5f; background: rgba(255, 42, 95, 0.08); }
+        .intel-block.amber { border-left-color: #ffb703; background: rgba(255, 183, 3, 0.08); }
+        .intel-block.purple { border-left-color: #a855f7; background: rgba(168, 85, 247, 0.08); }
+
+        .flag-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .flag-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .flag-chip img {
+            width: 22px;
+            height: 15px;
+            object-fit: cover;
+            border-radius: 2px;
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+
+        .controls {
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 14px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .btn {
+            background: rgba(0, 240, 255, 0.08);
+            color: #00f0ff;
+            border: 1.5px solid #00f0ff;
+            padding: 9px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            transition: all 0.25s ease;
+        }
+        .btn:hover { 
+            background: #00f0ff; 
+            color: #04070d; 
+            box-shadow: 0 0 18px rgba(0, 240, 255, 0.7); 
+        }
+
+        .sarkha-link-btn {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255, 42, 95, 0.12);
+            border: 1.5px solid #ff2a5f;
+            color: #ff2a5f;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11.5px;
+            font-weight: 800;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .sarkha-link-btn:hover {
+            background: #ff2a5f;
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(255, 42, 95, 0.7);
+        }
+
+        /* POP-UP MODAL VISOR FOR EXHIBITS & VIDEOS */
+        .generic-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(4, 7, 13, 0.92);
+            backdrop-filter: blur(12px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .generic-modal-content {
+            background: rgba(8, 12, 20, 0.98);
+            border: 1.5px solid #00f0ff;
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.4);
+            border-radius: 8px;
+            padding: 22px;
+            max-width: 720px;
+            width: 92%;
+            position: relative;
+        }
+
+        /* CIA MAP VIEWER (MANUAL HUD TOGGLE) */
+        .intel-map-viewer {
+            position: absolute;
+            top: 70px;
+            right: 25px;
+            width: calc(100vw - 600px);
+            height: calc(100vh - 100px);
+            background: rgba(6, 10, 18, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1.5px solid #00f0ff;
+            box-shadow: 0 0 35px rgba(0, 240, 255, 0.3);
+            border-radius: 8px;
+            z-index: 999;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .intel-map-header {
+            background: rgba(0, 240, 255, 0.15);
+            padding: 12px 18px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #00f0ff;
+            letter-spacing: 1.5px;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+        }
+        .intel-map-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+            background: #04070d;
+        }
+        .intel-map-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.85);
+        }
+
+        .flame-marker { 
+            font-size: 32px; 
+            color: #ff2a5f; 
+            text-shadow: 0 0 18px #ff2a5f, 0 0 32px #ff0040; 
+            animation: pulse-flame 1.1s infinite alternate ease-in-out; 
+        }
+        @keyframes pulse-flame { 
+            0% { transform: scale(1); } 
+            100% { transform: scale(1.35); filter: drop-shadow(0 0 15px #ff0040); } 
+        }
+
+        .leader-avatar { 
+            width: 52px; 
+            height: 52px; 
+            border-radius: 50%; 
+            border: 2px solid #00f0ff; 
+            box-shadow: 0 0 18px rgba(0, 240, 255, 0.85); 
+            object-fit: cover; 
+            background-color: #000;
+            display: block;
+        }
+
+        .flag-avatar {
+            width: 50px;
+            height: 32px;
+            border-radius: 3px;
+            border: 2px solid #00f0ff; 
+            box-shadow: 0 0 18px rgba(0, 240, 255, 0.85); 
+            object-fit: cover; 
+            background-color: #000;
+            display: block;
+        }
+
+        .city-label {
+            background: rgba(6, 9, 14, 0.96) !important;
+            border: 1px solid #00f0ff !important;
+            color: #ffffff !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-weight: 800 !important;
+            font-size: 11.5px !important;
+            letter-spacing: 1px !important;
+            padding: 5px 12px !important;
+            box-shadow: 0 4px 18px rgba(0, 240, 255, 0.3) !important;
+            border-radius: 4px !important;
+        }
+        .country-label {
+            background: rgba(0, 0, 0, 0.75) !important;
+            border: none !important;
+            color: #ffffff !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-weight: 800 !important;
+            font-size: 10.5px !important;
+            letter-spacing: 2px !important;
+            padding: 3px 8px !important;
+            border-radius: 3px !important;
+        }
+
+        .animated-polyline-red { stroke: #ff2a5f; stroke-dasharray: 10, 10; animation: dash 25s linear infinite; }
+        .animated-polyline-amber { stroke: #ffb703; stroke-dasharray: 12, 12; animation: dash 20s linear infinite; }
+        .animated-polyline-cyan { stroke: #00f0ff; stroke-dasharray: 8, 8; animation: dash 18s linear infinite; }
+        @keyframes dash { to { stroke-dashoffset: -1000; } }
+    </style>
+</head>
+<body>
+
+    <div class="progress-bar-container">
+        <div id="progressBar" class="progress-bar-fill"></div>
+    </div>
+
+    <div class="gps-ticker">
+        <div class="status-dot"></div>
+        <span>GEOINT RECON // LAT: <span id="latVal">14.800</span>° N | LNG: <span id="lngVal">46.000</span>° E</span>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- SINGLE EXHIBIT POP-UP MODAL -->
+    <div id="exhibitModal" class="generic-modal" onclick="closeExhibitModal(event)">
+        <div class="generic-modal-content" onclick="event.stopPropagation()">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(0,240,255,0.4); padding-bottom: 10px; margin-bottom: 15px;">
+                <span id="exhibitModalTitle" style="font-family: 'JetBrains Mono', monospace; color: #00f0ff; font-weight: 800; font-size: 13px; letter-spacing: 1.5px;">
+                    <i class="fa-solid fa-image"></i> EXHIBIT VIEWER
+                </span>
+                <button onclick="closeExhibitModal()" style="background: none; border: none; color: #ff2a5f; font-size: 22px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 800;">[X]</button>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center; max-height: 72vh; overflow: hidden;">
+                <img id="exhibitModalImg" src="" style="max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 4px; border: 1.5px solid #00f0ff;" alt="Exhibit Image">
+            </div>
+        </div>
+    </div>
+
+    <!-- UNIVERSAL VIDEO / SHORTS POP-UP MODAL -->
+    <div id="videoModal" class="generic-modal" onclick="closeVideoModal(event)">
+        <div class="generic-modal-content" onclick="event.stopPropagation()" style="max-width: 540px; border-color: #ff2a5f; box-shadow: 0 0 40px rgba(255, 42, 95, 0.4);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,42,95,0.4); padding-bottom: 10px; margin-bottom: 15px;">
+                <span id="videoModalTitle" style="font-family: 'JetBrains Mono', monospace; color: #ff2a5f; font-weight: 800; font-size: 13px; letter-spacing: 1.5px;">
+                    <i class="fa-solid fa-circle-play"></i> VIDEO EXHIBIT
+                </span>
+                <button onclick="closeVideoModal()" style="background: none; border: none; color: #ff2a5f; font-size: 22px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 800;">[X]</button>
+            </div>
+            <div style="width: 100%; height: 510px; border-radius: 6px; overflow: hidden; border: 1.5px solid #ff2a5f; background: #000;">
+                <iframe id="videoModalIframe" src="" style="width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- CIA MAP VIEWER (MANUAL HUD TOGGLE) -->
+    <div id="intelViewer" class="intel-map-viewer">
+        <div class="intel-map-header">
+            <span id="intelViewerTitle"><i class="fa-solid fa-map-location-dot"></i> CIA HISTORICAL MAP ATTACHMENT</span>
+            <button onclick="closeCiaMap()" style="background: none; border: none; color: #ff2a5f; font-size: 16px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 800;">[X] CLOSE</button>
+        </div>
+        <div class="intel-map-body">
+            <img id="intelMapImg" src="" class="intel-map-img" alt="CIA Map">
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="dossier-header">
+            <span>[ ANSAR ALLAH PRESENTATION ]</span>
+            <span class="status-tag">ACTIVE RECON</span>
+        </div>
+        <div id="phaseTag" class="phase-tag">PHASE 00</div>
+        <div id="slideTitle" class="title">...</div>
+        <div id="slideSubtitle" class="subtitle">...</div>
+        
+        <div id="videoBox" class="video-container"></div>
+
+        <div id="slideContent" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        
+        <div class="controls">
+            <button id="prevBtn" class="btn" onclick="prevSlide()"><i class="fa-solid fa-chevron-left"></i> PREV</button>
+            <span id="slideCounter" style="color: #00f0ff; font-weight: 800; font-size: 13px;">01 / 13</span>
+            <button class="btn" onclick="nextSlide()">NEXT <i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        const map = L.map('map', { 
+            zoomControl: false,
+            preferCanvas: true,
+            fadeAnimation: true,
+            zoomAnimation: true,
+            markerZoomAnimation: true
+        }).setView([14.8, 46.0], 6);
+
+        const darkLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Esri Dark Gray', 
+            maxZoom: 16,
+            keepBuffer: 6
+        }).addTo(map);
+
+        map.on('move', () => {
+            const center = map.getCenter();
+            document.getElementById('latVal').innerText = center.lat.toFixed(3);
+            document.getElementById('lngVal').innerText = center.lng.toFixed(3);
+        });
+
+        function getCountryColor(name) {
+            if (!name) return '#334155';
+            const n = name.toLowerCase();
+            if (n.includes('yemen')) return '#d90429';
+            if (n.includes('saudi')) return '#10b981';
+            if (n.includes('iran')) return '#7209b7';
+            if (n.includes('israel')) return '#2563eb';
+            if (n.includes('egypt')) return '#f59e0b';
+            if (n.includes('emirates') || n.includes('uae')) return '#06b6d4';
+            if (n.includes('oman')) return '#0d9488';
+            if (n.includes('jordan')) return '#f97316';
+            if (n.includes('iraq')) return '#ec4899';
+            if (n.includes('syria')) return '#a855f7';
+            if (n.includes('sudan')) return '#84cc16';
+            if (n.includes('eritrea')) return '#e11d48';
+            if (n.includes('ethiopia')) return '#b45309';
+            if (n.includes('somalia') || n.includes('somaliland')) return '#0284c7';
+            if (n.includes('djibouti')) return '#facc15';
+            return '#475569';
+        }
+
+        function renderRisikoLayer(geojson) {
+            L.geoJSON(geojson, {
+                smoothFactor: 1.5,
+                style: function(feature) {
+                    const name = feature.properties.ADMIN || feature.properties.NAME || feature.properties.name || feature.properties.sovereignt || "";
+                    return { 
+                        fillColor: getCountryColor(name), 
+                        weight: 2, 
+                        color: '#ffffff',
+                        opacity: 0.85, 
+                        fillOpacity: 0.65
+                    };
+                },
+                onEachFeature: function(feature, layer) {
+                    const name = feature.properties.ADMIN || feature.properties.NAME || feature.properties.name || "";
+                    const targetCountries = ['Yemen', 'Saudi Arabia', 'Iran', 'Israel', 'Egypt', 'United Arab Emirates', 'Oman', 'Sudan', 'Eritrea', 'Ethiopia', 'Somalia'];
+                    if (targetCountries.some(tc => name.toLowerCase().includes(tc.toLowerCase()))) {
+                        layer.bindTooltip(name.toUpperCase(), { 
+                            permanent: true, 
+                            direction: 'center', 
+                            className: 'country-label' 
+                        });
+                    }
+                }
+            }).addTo(map);
+        }
+
+        fetch('https://rawcdn.githack.com/datasets/geo-countries/master/data/countries.geojson')
+            .then(res => res.json())
+            .then(data => renderRisikoLayer(data))
+            .catch(() => {
+                fetch('https://cdn.jsdelivr.net/gh/datasets/geo-countries@master/data/countries.geojson')
+                    .then(res => res.json())
+                    .then(data => renderRisikoLayer(data));
+            });
+
+        function openExhibitModal(imgFile, titleText) {
+            document.getElementById('exhibitModalImg').src = imgFile;
+            document.getElementById('exhibitModalTitle').innerHTML = `<i class="fa-solid fa-image"></i> ${titleText}`;
+            document.getElementById('exhibitModal').style.display = 'flex';
+        }
+
+        function closeExhibitModal(e) {
+            if (!e || e.target.id === 'exhibitModal' || e.target.tagName === 'BUTTON') {
+                document.getElementById('exhibitModal').style.display = 'none';
+            }
+        }
+
+        function openVideoModal(youtubeId, titleText) {
+            document.getElementById('videoModalIframe').src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1";
+            document.getElementById('videoModalTitle').innerHTML = `<i class="fa-solid fa-circle-play"></i> ${titleText}`;
+            document.getElementById('videoModal').style.display = 'flex';
+        }
+
+        function closeVideoModal(e) {
+            if (!e || e.target.id === 'videoModal' || e.target.tagName === 'BUTTON') {
+                document.getElementById('videoModalIframe').src = "";
+                document.getElementById('videoModal').style.display = 'none';
+            }
+        }
+
+        function openCiaMap(imgSrc, titleText) {
+            document.getElementById('intelMapImg').src = imgSrc;
+            document.getElementById('intelViewerTitle').innerHTML = `<i class="fa-solid fa-map-location-dot"></i> ${titleText}`;
+            document.getElementById('intelViewer').style.display = 'flex';
+        }
+
+        function closeCiaMap() {
+            document.getElementById('intelViewer').style.display = 'none';
+        }
+
+        const slides = [
+            {
+                phase: "PHASE 00 // HISTORICAL CONTEXT",
+                title: "The Division of Yemen: North vs. South (1967–1990)",
+                subtitle: "LOC: HISTORICAL BORDER [SANAA (YAR) vs ADEN (PDRY)]",
+                video: "",
+                content: `
+                <div class="intel-block">
+                    <strong>North Yemen (YAR - Capital: Sanaa):</strong> Conservative republic with strong Zaydi cultural influence.
+                </div>
+                <div class="intel-block warning">
+                    <strong>South Yemen (PDRY - Capital: Aden):</strong> The Arab world's only Marxist-Leninist socialist state.
+                </div>
+                <div class="intel-block amber">
+                    <strong>1990 Unification & 1994 War:</strong> Unified in 1990; despite this, the South made several secession attempts, which the North repeatedly suppressed, fueling decades of Southern resentment.
+                </div>`,
+                coords: [14.8, 46.0], zoom: 6,
+                markers: [
+                    { lat: 15.3694, lng: 44.1910, type: "flag", img: "flag-yemen-arab-republic-north-yemen-flag-yemen-arab-republic-also-known-as-north-yemen-its-capital-was-sana-d-131899923.jpg.webp", fallbackImg: "Flag_of_the_Yemen_Arab_Republic.svg", label: "NORTH YEMEN (YAR - SANAA)" },
+                    { lat: 12.7855, lng: 45.0186, type: "flag", img: "Flag_of_South_Yemen.jpg", fallbackImg: "Flag_of_South_Yemen.png", label: "SOUTH YEMEN (PDRY - ADEN)" }
+                ],
+                lines: [
+                    { coords: [[12.65, 43.50], [13.30, 44.40], [13.70, 44.70], [13.90, 45.60], [14.80, 45.70], [17.00, 49.00], [19.00, 52.00]], colorClass: "animated-polyline-amber" }
+                ]
+            },
+            {
+                phase: "PHASE 01 // ORIGINS & SAADA WARS",
+                title: "Zaydi Revivalism & The Saada Wars (2002–2010)",
+                subtitle: "LOC: SAADA HIGHLANDS [16.94° N, 43.76° E]",
+                video: "", 
+                content: `
+                <div style="display: flex; align-items: center; gap: 12px; background: rgba(0,240,255,0.08); padding: 10px; border-radius: 5px; border-left: 4px solid #00f0ff;">
+                    <img src="hussein.jpg" style="width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid #00f0ff; object-fit: cover;" alt="Hussein al-Houthi" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Abdul-Malik_al-Houthi.jpg/220px-Abdul-Malik_al-Houthi.jpg';">
+                    <div>
+                        <strong style="color: #00f0ff; font-size: 13.5px; display: block;">HUSSEIN BADREDDIN AL-HOUTHI</strong>
+                        <span style="font-size: 11px; color: #a0aec0; font-family: 'JetBrains Mono', monospace;">Founder of Believing Youth (Killed 2004)</span>
+                    </div>
+                </div>
+
+                <div class="intel-block warning">
+                    <strong>The Sarkha ("The Scream"):</strong> Adopted in 2002 after the US invasion of Iraq: <i>"God is Greatest, Death to America, Death to Israel, A Curse Upon the Jews, Victory to Islam"</i>.
+                </div>
+
+                <div class="intel-block amber">
+                    <strong>Anti-Wahhabi Roots & First Border Clash (2009):</strong> Born as a Zaydi defensive reaction against Saudi-funded Wahhabi proselytism in Sa'da. In 2009 (6th Saada War), Houthi fighters crossed into Jizan, triggering Saudi Arabia's first direct military intervention.
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="openExhibitModal('sarkha_banner.jpg', 'THE SARKHA SLOGAN BANNER')" class="sarkha-link-btn" style="flex: 1;">
+                            <i class="fa-solid fa-image"></i> [SLOGAN BANNER]
+                        </button>
+                        <button onclick="openExhibitModal('sarkha_protest.jpg', 'SARKHA MASS RALLY PROTEST')" class="sarkha-link-btn" style="flex: 1; border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);">
+                            <i class="fa-solid fa-users"></i> [MASS RALLY]
+                        </button>
+                    </div>
+                    <button onclick="openCiaMap('yemen_physio-2012.jpg', 'CIA PHYSIOGRAPHY & TOPOGRAPHY MAP (2012)')" class="sarkha-link-btn" style="border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);">
+                        <i class="fa-solid fa-map-location-dot"></i> [VIEW CIA PHYSICAL MAP]
+                    </button>
+                </div>`,
+                coords: [16.9401, 43.7629], zoom: 8,
+                markers: [
+                    { lat: 16.9401, lng: 43.7629, type: "leader", img: "hussein.jpg", label: "SAADA: HUSSEIN AL-HOUTHI (FOUNDER, KILLED 2004)" },
+                    { lat: 16.8897, lng: 42.5511, type: "flag", img: "Flag_of_Saudi_Arabia.svg", label: "JIZAN: SAUDI BORDER ZONE (HOUTHI INCURSION 2009)" }
+                ],
+                lines: [
+                    { coords: [[16.9401, 43.7629], [16.8897, 42.5511]], colorClass: "animated-polyline-red" }
+                ]
+            },
+            {
+                phase: "PHASE 02 // REVOLUTION & SEIZURE",
+                title: "Arab Spring, Hadi's Rise & The Seizure of Sanaa (2011–2014)",
+                subtitle: "LOC: SANAA CAPITAL [15.36° N, 44.19° E]",
+                video: "",
+                content: `
+                <div class="intel-block">
+                    <strong>Arab Spring & Saleh's Resignation (2011–2012):</strong> Mass protests forced Saleh to resign in exchange for immunity. Vice President <strong>Abdrabbuh Mansur Hadi</strong> assumed interim presidency.
+                </div>
+                <div class="intel-block amber">
+                    <strong>Fuel Subsidy Crisis (July 2014):</strong> Fuel subsidy cuts (+60%–90% price hikes) triggered mass public anger. Ansar Allah leveraged social discontent to position itself as a national populist movement.
+                </div>
+                <div class="intel-block warning">
+                    <strong>Tactical Alliance & Sanaa Coup (Sept 2014):</strong> Seeking revenge, Saleh allied his loyalist Republican Guard troops with the Houthis. On Sept 21, 2014, joint forces occupied ministries and seized Sanaa.
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="openExhibitModal('2011–2012_Yemeni_revolution_(from_Al_Jazeera)_-_20110301-14.jpg', 'YEMEN ARAB SPRING PROTESTS (2011)')" class="sarkha-link-btn" style="flex: 1; border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);">
+                            <i class="fa-solid fa-flag"></i> [2011 ARAB SPRING PROTESTS]
+                        </button>
+                        <button onclick="openExhibitModal('0605_Yemen.jpg', 'SANAA MASS FUEL PROTESTS (2014)')" class="sarkha-link-btn" style="flex: 1; border-color: #ffb703; color: #ffb703; background: rgba(255,183,3,0.08);">
+                            <i class="fa-solid fa-users-line"></i> [SANAA FUEL PROTESTS]
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="openExhibitModal('61385a5a-85e3-1c2a-87a1-30442cd16461.webp', 'ADEN FUEL & POWER PROTESTS')" class="sarkha-link-btn" style="flex: 1; border-color: #ffb703; color: #ffb703; background: rgba(255,183,3,0.08);">
+                            <i class="fa-solid fa-fire"></i> [ADEN FUEL PROTESTS]
+                        </button>
+                        <button onclick="openExhibitModal('afaew.jpeg', 'HOUTHI PROPAGANDA: SEPT 21 REVOLUTION (2014)')" class="sarkha-link-btn" style="flex: 1; border-color: #ff2a5f; color: #ff2a5f; background: rgba(255,42,95,0.08);">
+                            <i class="fa-solid fa-bullhorn"></i> [HOUTHI PROPAGANDA]
+                        </button>
+                    </div>
+                    <button onclick="openCiaMap('yemen_admin_2012.jpg', 'CIA ADMINISTRATIVE DIVISIONS MAP (2012)')" class="sarkha-link-btn" style="border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);">
+                        <i class="fa-solid fa-map-location-dot"></i> [VIEW CIA ADMINISTRATIVE MAP]
+                    </button>
+                </div>`,
+                coords: [15.3694, 44.1910], zoom: 9,
+                markers: [
+                    { lat: 15.3694, lng: 44.1910, type: "leader", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Abdul-Malik_al-Houthi.jpg/220px-Abdul-Malik_al-Houthi.jpg", label: "SANAA: ABDUL-MALIK AL-HOUTHI & SALEH FORCES" }
+                ],
+                lines: [
+                    { coords: [[16.9401, 43.7629], [15.3694, 44.1910]], colorClass: "animated-polyline-red" }
+                ]
+            },
+            {
+                phase: "PHASE 03 // ESCALATION & INTERVENTION",
+                title: "Hadi's Escape, Saudi Intervention & Saleh's Execution (2015–2017)",
+                subtitle: "LOC: SANAA TO ADEN & RIYADH",
+                video: "",
+                content: `
+                <div class="intel-block">
+                    <strong>Hadi's Escape & UN Appeal (2015):</strong> Placed under house arrest in Sanaa, Hadi escaped disguised to Aden (Feb) and fled to Riyadh (March), invoking UN Charter Art. 51 to request international military assistance.
+                </div>
+                <div class="intel-block warning">
+                    <strong>Saudi Intervention Launched (March 2015):</strong> Riyadh formed a 10-nation coalition and launched Operation <i>Decisive Storm</i> to prevent an Iranian-aligned proxy state on its southern border.
+                </div>
+                <div class="intel-block amber">
+                    <strong>Breakup & Execution of Saleh (Dec 2017):</strong> Saleh announced a split with the Houthis to negotiate with the Saudis. Houthis branded it high treason, ambushed his convoy, and executed him 2 days later, consolidating total control over Sanaa.
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="openExhibitModal('1536x864_302936.jpg.webp', 'PRESIDENT HADI & MBS IN RIYADH (2015)')" class="sarkha-link-btn" style="flex: 1; border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);">
+                            <i class="fa-solid fa-handshake"></i> [PRESIDENT HADI & MBS IN RIYADH]
+                        </button>
+                        <button onclick="openExhibitModal('yemen-coup.jpg.avif', 'OPERATION DECISIVE STORM: AIRSTRIKES (2015)')" class="sarkha-link-btn" style="flex: 1; border-color: #ff2a5f; color: #ff2a5f; background: rgba(255,42,95,0.08);">
+                            <i class="fa-solid fa-bomb"></i> [OPERATION DECISIVE STORM: AIRSTRIKES]
+                        </button>
+                    </div>
+                    <button onclick="openExhibitModal('gettyimages-838175754-7433527e105f9a9e7efb6c57d21cd2e2d1f04a82.jpg', 'SALEH FINAL SPEECH & BREAK WITH HOUTHIS (DEC 2017)')" class="sarkha-link-btn" style="border-color: #ffb703; color: #ffb703; background: rgba(255,183,3,0.08);">
+                        <i class="fa-solid fa-microphone"></i> [SALEH FINAL SPEECH & BREAK]
+                    </button>
+                </div>`,
+                coords: [18.0, 45.0], zoom: 6,
+                markers: [
+                    { lat: 15.3694, lng: 44.1910, type: "leader", img: "Nicole_Fontaine_and_Ali_Abdullah_Saleh,_2000_(1)_(cropped2).jpg", label: "SANAA: SALEH EXECUTION ZONE (DEC 2017)" },
+                    { lat: 12.7855, lng: 45.0186, type: "leader", img: "Abdrabbuh_Mansur Hadi.jpg", label: "ADEN: HADI ESCAPE & TEMPORARY CAPITAL (FEB 2015)" },
+                    { lat: 24.7136, lng: 46.6753, type: "flag", img: "Flag_of_Saudi_Arabia.svg", label: "RIYADH: SAUDI COALITION HQ & HADI EXILE" }
+                ],
+                lines: [
+                    { coords: [[15.3694, 44.1910], [12.7855, 45.0186], [24.7136, 46.6753]], colorClass: "animated-polyline-amber" },
+                    { coords: [[24.7136, 46.6753], [15.3694, 44.1910]], colorClass: "animated-polyline-red" }
+                ]
+            },
+            {
+                phase: "PHASE 04 // ASYMMETRIC WARFARE",
+                title: "Asymmetric Counterstrikes & Long-Range Capabilities (2015–2019)",
+                subtitle: "LAUNCH VECTORS: SAUDI INFRASTRUCTURE & ARAMCO",
+                video: "", 
+                content: `
+                <div class="intel-block">
+                    <strong>Asymmetric Defense Strategy:</strong> Facing Saudi air superiority, Ansar Allah adapted through underground fortification, mobile launch units, and technical support from IRGC and Hezbollah advisors.
+                </div>
+                <div class="intel-block warning">
+                    <strong>Long-Range Missile & Drone Vectors:</strong> Houthis escalated cross-border strikes against Saudi infrastructure, targeting King Khalid Air Base in Khamis Mushait and launching 
+                    <a href="javascript:void(0)" onclick="openVideoModal('0wt4Kx91mlY', 'RAJUM DRONE FOOTAGE')" style="color: #00f0ff; font-weight: 800; text-decoration: underline;">Rajum Drones</a> toward Riyadh.
+                </div>
+                <div class="intel-block amber">
+                    <strong>The Abqaiq Aramco Shock (Sept 2019):</strong> Coordinated long-range drone and cruise missile strikes temporarily knocked out 50% of Saudi oil production, demonstrating unprecedented strategic leverage.
+                </div>`,
+                coords: [22.0, 46.5], zoom: 6,
+                markers: [
+                    { lat: 24.7136, lng: 46.6753, type: "flag", img: "Flag_of_Saudi_Arabia.svg", fallbackImg: "Flag_of_Saudi_Arabia.png", label: "RIYADH: SAUDI COALITION COMMAND" },
+                    { lat: 25.9348, lng: 49.6706, type: "flame", label: "ABQAIQ: ARAMCO OIL PROCESSING PLANT" },
+                    { lat: 15.3694, lng: 44.1910, type: "flame", label: "SANAA: HOUTHI LAUNCH VECTOR" }
+                ],
+                lines: [
+                    { coords: [[15.3694, 44.1910], [24.7136, 46.6753]], colorClass: "animated-polyline-red" },
+                    { coords: [[15.3694, 44.1910], [25.9348, 49.6706]], colorClass: "animated-polyline-amber" }
+                ]
+            },
+            {
+                phase: "PHASE 05 // REGIONAL ESCALATION",
+                title: "October 7 & Gaza Solidarity: The Strategy Behind Maritime Blockade",
+                subtitle: "LOC: RED SEA VECTOR [SANAA TO TEL AVIV & GAZA]",
+                video: "",
+                content: `
+                <div class="intel-block warning">
+                    <strong>October 7 Catalyst & Gaza Solidarity:</strong> Following Hamas's October 7, 2023 attacks and Israel's military operation in Gaza, Ansar Allah declared full military solidarity with Palestine, framing the Red Sea as an active front in the "Axis of Resistance."
+                </div>
+                <div class="intel-block amber">
+                    <strong>Strategic Rationale (Why Block Bab el-Mandeb?):</strong> By targeting Israeli-linked and Western commercial shipping in Bab el-Mandeb, the Houthis weaponize global economic chokepoints to demand an immediate Gaza ceasefire, elevating their domestic legitimacy and regional standing.
+                </div>
+                <div class="intel-block">
+                    <strong>Direct Long-Range Escalation & Tel Aviv Strike (July 2024):</strong> Beyond maritime attacks, Houthis launched a long-range 
+                    <a href="javascript:void(0)" onclick="openVideoModal('hFCKAeeC02E', 'SAMAD-3 LONG-RANGE DRONE STRIKE')" style="color: #ff2a5f; font-weight: 800; text-decoration: underline;">Samad-3 Drone</a> striking central Tel Aviv (2,600 km), triggering Israeli Air Force retaliation 
+                    (<a href="javascript:void(0)" onclick="openVideoModal('rgtG6c29zGQ', 'OPERATION OUTSTRETCHED ARM - HODEIDAH COUNTERSTRIKE')" style="color: #00f0ff; font-weight: 800; text-decoration: underline;">Operation Outstretched Arm</a>) against oil storage facilities in Hodeidah Port.
+                </div>`,
+                coords: [28.0, 38.0], zoom: 5,
+                markers: [
+                    { lat: 32.0853, lng: 34.7818, type: "leader", img: "ea8fc07_ftp-1-ivl4rqovpm58-5329942-01-06.avif", label: "TEL AVIV: SAMAD-3 DRONE IMPACT ZONE" },
+                    { lat: 14.7978, lng: 42.9545, type: "flame", label: "HODEIDAH PORT: IAF BOMBING TARGET" },
+                    { lat: 12.5833, lng: 43.3333, type: "flame", label: "BAB EL-MANDEB: NAVAL BLOCKADE VECTOR" }
+                ],
+                lines: [
+                    { coords: [[15.3694, 44.1910], [25.0, 36.0], [32.0853, 34.7818]], colorClass: "animated-polyline-red" },
+                    { coords: [[32.0853, 34.7818], [14.7978, 42.9545]], colorClass: "animated-polyline-cyan" }
+                ]
+            },
+            {
+                phase: "PHASE 06 // MARITIME INTERDICTION",
+                title: "Bab el-Mandeb Strategy & Galaxy Leader Hijacking",
+                subtitle: "CHOKEPOINT: BAB EL-MANDEB [12.58° N, 43.33° E]",
+                video: `<iframe src="https://www.youtube.com/embed/vbB2tQLdJiE" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`,
+                content: `
+                <div class="intel-block warning">
+                    <strong>Chokepoint Leverage (The Why):</strong> Bab el-Mandeb handles 12%–15% of global trade. Blocking this 18-mile strait weaponizes global maritime shipping to force a Gaza ceasefire and project regional power.
+                </div>
+                <div class="intel-block">
+                    <strong>Nov 19, 2023 Opening Attack:</strong> Heliborne seizure of car carrier <i>Galaxy Leader</i> off Hodeidah using 
+                    <a href="javascript:void(0)" onclick="openVideoModal('qkcmM4mcIp4', 'USV / UNCREWED SURFACE VESSELS DEPLOYMENT')" style="color: #00f0ff; font-weight: 800; text-decoration: underline;">USVs</a> and ASBMs.
+                </div>`,
+                coords: [12.5833, 43.3333], zoom: 8,
+                markers: [{ lat: 12.5833, lng: 43.3333, type: "flame", label: "BAB EL-MANDEB: NAVAL BLOCKADE" }],
+                lines: [
+                    { coords: [[12.5833, 43.3333], [14.7978, 42.9545]], colorClass: "animated-polyline-amber" }
+                ]
+            },
+            {
+                phase: "PHASE 07 // AXIS OF RESISTANCE",
+                title: "The Axis of Resistance & Regional Alliances",
+                subtitle: "TEHRAN - SANAA - BEIRUT - BAGHDAD - DAMASCUS",
+                video: "",
+                content: `
+                <div class="intel-block purple">
+                    <strong>The Axis of Resistance Network:</strong>
+                    An asymmetric military alliance led by Iran against US military hegemony, Israel, and pro-Western Gulf states.
+                    
+                    <div class="flag-group">
+                        <div class="flag-chip"><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/Flag_of_Iran.svg" alt="Iran"> IRAN (IRGC)</div>
+                        <div class="flag-chip"><img src="sarkha_banner.jpg" alt="Houthi Slogan"> HOUTHIS (ANSAR ALLAH)</div>
+                        <div class="flag-chip"><img src="https://upload.wikimedia.org/wikipedia/commons/2/23/Flag_of_Hezbollah.svg" alt="Hezbollah" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/8/89/Flag_of_Yemen.svg';"> HEZBOLLAH</div>
+                        <div class="flag-chip"><img src="https://upload.wikimedia.org/wikipedia/commons/f/f6/Flag_of_Iraq.svg" alt="Iraq"> IRAQI MILITIAS</div>
+                        <div class="flag-chip"><img src="Flag-Syria.jpg.webp" alt="Syria" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/5/53/Flag_of_Syria.svg';"> SYRIA</div>
+                    </div>
+                </div>
+
+                <div class="intel-block">
+                    <strong>Strategic Objective:</strong> Coordinated multi-front pressure against Western maritime routes and Israeli strategic depth.
+                </div>`,
+                coords: [25.0, 45.0], zoom: 5,
+                markers: [
+                    { lat: 12.5833, lng: 43.3333, type: "flame", label: "BAB EL-MANDEB: ANSAR ALLAH FRONT" },
+                    { lat: 35.6892, lng: 51.3890, type: "flag", img: "https://upload.wikimedia.org/wikipedia/commons/c/ca/Flag_of_Iran.svg", label: "TEHRAN: IRGC COMMAND" }
+                ],
+                lines: [
+                    { coords: [[35.6892, 51.3890], [15.3694, 44.1910]], colorClass: "animated-polyline-cyan" },
+                    { coords: [[15.3694, 44.1910], [12.5833, 43.3333]], colorClass: "animated-polyline-red" }
+                ]
+            },
+            {
+                phase: "PHASE 08 // MACROECONOMIC FALLOUT",
+                title: "Suez Toll Collapse & Cape Rerouting",
+                subtitle: "GLOBAL SHOCK: SUEZ CANAL & CAPE OF GOOD HOPE",
+                video: "",
+                content: `
+                <div class="intel-block warning">
+                    <strong>Suez Canal Traffic Collapse:</strong> Transit volume dropped by -67%, resulting in $6B–$7B annual revenue loss for Egypt.
+                </div>
+                <div class="intel-block amber">
+                    <strong>Cape of Good Hope Diversion:</strong> Shipping diverted around Africa (+3,500–4,000 nm, +10–14 days, +40% fuel burn), absorbing 10%–15% global fleet capacity.
+                </div>`,
+                coords: [5.0, 20.0], zoom: 3,
+                markers: [
+                    { lat: 30.5852, lng: 32.2654, type: "flame", label: "SUEZ CANAL (-67% TRANSIT COLLAPSE)" },
+                    { lat: -34.83, lng: 20.01, type: "flame", label: "CAPE OF GOOD HOPE MARITIME DIVERSION" }
+                ],
+                lines: [
+                    { coords: [[12.5833, 43.3333], [30.5852, 32.2654]], colorClass: "animated-polyline-red" },
+                    { 
+                        coords: [
+                            [12.5833, 43.3333], [11.80, 45.00], [10.50, 51.50], [0.00, 48.00],
+                            [-12.00, 44.00], [-25.00, 35.00], [-34.83, 20.01], [-30.00, 10.00],
+                            [-15.00, -5.00], [0.00, -10.00], [15.00, -20.00], [28.00, -15.00],
+                            [36.00, -6.00], [40.00, 3.00], [50.00, -1.00]
+                        ], 
+                        colorClass: "animated-polyline-amber" 
+                    }
+                ]
+            },
+            {
+                phase: "PHASE 09 // WESTERN INTERVENTION & ATTRITION",
+                title: "2024–2025: Western Naval Response & War of Attrition",
+                subtitle: "LOC: RED SEA & GULF OF ADEN [OPERATION PROSPERITY GUARDIAN & ASPIDES]",
+                video: "",
+                content: `
+                <div class="intel-block warning">
+                    <strong>US/UK Operation Prosperity Guardian & Strikes (Jan 2024):</strong> In response to continuous shipping attacks, a US-led coalition launched systematic airstrikes against Houthi radar, drone, and missile launch sites across Sanaa, Hodeidah, and Taiz.
+                </div>
+                <div class="intel-block">
+                    <strong>EU Operation Aspides (Feb 2024):</strong> The European Union deployed a defensive naval mission (led by Italy, France, and Greece) to escort commercial traffic in the Red Sea without conducting strikes on Yemeni soil.
+                </div>
+                <div class="intel-block amber">
+                    <strong>B-2 Stealth Strikes & Asymmetric Resilience (Late 2024–2025):</strong> The US military deployed B-2 stealth bombers against deeply fortified underground Houthi bunkers. Despite hundreds of coalition strikes, Ansar Allah sustained its blockade using low-cost USVs, drones, and anti-ship ballistic missiles.
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <button onclick="openExhibitModal('Fasan-frigate-escorting-Italian-merchant-ship_@Italian-Navy-scaled.jpg', 'EU OPERATION ASPIDES: ITALIAN NAVY FRIGATE VIRGINIO FASAN ESCORTING GRIMALDI MERCHANT SHIP')" class="sarkha-link-btn" style="flex: 1; border-color: #00f0ff; color: #00f0ff; background: rgba(0, 240, 255, 0.08);">
+                        <i class="fa-solid fa-ship"></i> [EU ASPIDES MERCHANT ESCORT]
+                    </button>
+                </div>`,
+                coords: [14.0, 42.5], zoom: 7,
+                markers: [
+                    { lat: 14.7978, lng: 42.9545, type: "flame", label: "HODEIDAH PORT: COALITION TARGET" },
+                    { lat: 15.3694, lng: 44.1910, type: "flame", label: "SANAA BUNKERS: B-2 STEALTH BOMBER TARGET" },
+                    { lat: 12.0, lng: 45.0, type: "flag", img: "https://upload.wikimedia.org/wikipedia/commons/b/b7/Flag_of_Europe.svg", label: "GULF OF ADEN: EU ASPIDES NAVAL TASK FORCE" }
+                ],
+                lines: [
+                    { coords: [[12.0, 45.0], [14.7978, 42.9545]], colorClass: "animated-polyline-cyan" },
+                    { coords: [[15.3694, 44.1910], [12.0, 45.0]], colorClass: "animated-polyline-red" }
+                ]
+            },
+            {
+                phase: "PHASE 10 // 2026 ESCALATION",
+                title: "2026 Bab el-Mandeb Escalation & Strategic Risk",
+                subtitle: "TEMPORARY CONTROL, COUNTEROFFENSIVE & FLUID LEVERAGE",
+                video: "",
+                content: `
+                <div class="intel-block amber">
+                    <strong>July 2026 Shipping Embargo:</strong> Houthis declared an embargo on Saudi-linked commercial shipping following military escalation around Sana’a International Airport.
+                </div>
+                <div class="intel-block warning">
+                    <strong>September 2026 Coastal Offensive:</strong> Ansar Allah launched a rapid coastal drive, seizing Mokha port and Perim Island while advancing toward Dhubab in the Bab el-Mandeb strait.
+                </div>
+                <div class="intel-block">
+                    <strong>October 2026 Counteroffensive & Fluid Control:</strong> Saudi-backed forces reported recapturing Dhubab (Oct 5), maintaining a highly fluid tactical frontline along the Red Sea coast.
+                </div>
+                <div class="intel-block purple">
+                    <strong>Long-Range Strategic Claims:</strong> 
+                    <a href="javascript:void(0)" onclick="openVideoModal('08dG8eDzmQk', 'RIYADH AIRPORT & RABIGH STRIKES')" style="color: #ff2a5f; font-weight: 800; text-decoration: underline;">Claimed Missile Strikes</a> 
+                    on King Khalid International Airport (Riyadh) and Rabigh Oil Refinery.
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <button onclick="openExhibitModal('GettyImages-1319962802.jpg.avif', 'BAB EL-MANDEB STRAIT & PERIM ISLAND SATELLITE VIEW')" class="sarkha-link-btn" style="border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);">
+                        <i class="fa-solid fa-earth-africa"></i> [BAB EL-MANDEB SATELLITE VIEW]
+                    </button>
+                </div>`,
+                coords: [16.5, 43.5], zoom: 7,
+                markers: [
+                    { lat: 15.3694, lng: 44.1910, type: "flame", label: "SANAA: LAUNCH VECTOR TO RIYADH" },
+                    { lat: 13.3220, lng: 43.2420, type: "flame", label: "MOKHA: SEIZED SEPT 2026" },
+                    { lat: 12.6558, lng: 43.4144, type: "flame", label: "PERIM ISLAND: SEIZED SEPT 2026" },
+                    { lat: 12.7267, lng: 43.4340, type: "flame", label: "DHUBAB: RECAPTURED 5 OCT 2026" },
+                    { lat: 24.9576, lng: 46.6988, type: "flame", label: "RIYADH AIRPORT: CLAIMED STRIKE" },
+                    { lat: 22.8020, lng: 39.0320, type: "flame", label: "RABIGH REFINERY: CLAIMED STRIKE" }
+                ],
+                lines: [
+                    { coords: [[15.3694, 44.1910], [24.9576, 46.6988]], colorClass: "animated-polyline-red" },
+                    { coords: [[15.3694, 44.1910], [22.8020, 39.0320]], colorClass: "animated-polyline-amber" }
+                ]
+            },
+            {
+                phase: "PHASE 11 // HUMANITARIAN IMPACT",
+                title: "The Human Cost: World's Worst Famine Crisis",
+                subtitle: "UN OCHA DOSSIER // FAMINE, CHOLERA & INFRASTRUCTURE COLLAPSE",
+                video: "",
+                content: `
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="openExhibitModal('e28a6b_ead80ccf40b44885a4615ddc761a03f8~mv2.png.avif', 'YEMENI CHILDREN PRAYING FOR FOOD / FAMINE CRISIS')" class="sarkha-link-btn" style="flex: 1; border-color: #ff2a5f; color: #ff2a5f; background: rgba(255, 42, 95, 0.12);">
+                        <i class="fa-solid fa-hand-holding-heart"></i> [FAMINE & FOOD CRISIS]
+                    </button>
+                    <button onclick="openExhibitModal('cq5dam.thumbnail.cropped.1500.844.jpeg', 'YEMENI HOSPITALS & MALNUTRITION WARD')" class="sarkha-link-btn" style="flex: 1; border-color: #ffb703; color: #ffb703; background: rgba(255, 183, 3, 0.12);">
+                        <i class="fa-solid fa-hospital"></i> [HEALTH SYSTEM COLLAPSE]
+                    </button>
+                </div>
+
+                <div class="intel-block warning">
+                    <strong>21.6+ Million in Need:</strong> Over 80% of Yemen's total population requires immediate humanitarian assistance and food aid (UN OCHA).
+                </div>
+                <div class="intel-block amber">
+                    <strong>Severe Child Malnutrition:</strong> Port blockades of Hodeidah, currency collapse, and destroyed farmland created widespread severe famine affecting millions of children.
+                </div>
+                <div class="intel-block">
+                    <strong>Health System Collapse:</strong> Largest cholera outbreak in modern history (>2.5M cases) due to destroyed water treatment plants and bombed medical infrastructure.
+                </div>`,
+                coords: [15.5, 47.0], zoom: 6,
+                markers: [
+                    { lat: 15.3694, lng: 44.1910, type: "flame", label: "SANAA: HUMANITARIAN AID DISTRIBUTION HUB" },
+                    { lat: 14.7978, lng: 42.9545, type: "flame", label: "HODEIDAH: BLOCKADED FOOD IMPORT PORT" }
+                ],
+                lines: []
+            },
+            {
+                phase: "PHASE 12 // SOURCES & METHODOLOGY",
+                title: "References, Academic Sources & Acknowledgments",
+                subtitle: "BIBLIOGRAPHY, MEDIA ARCHIVES & AI ASSISTANCE",
+                video: "",
+                content: `
+                <div class="intel-block">
+                    <strong>Academic Bibliography & Research Texts:</strong>
+                    <ul style="margin-left: 18px; margin-top: 6px; line-height: 1.6;">
+                        <li><strong>Milani, M.:</strong> <i>Power and Deterrence: Iran's Rise and Its Geostrategic Realities</i> (Chapter 7).</li>
+                        <li><strong>Phillips, C.:</strong> <i>Battleground: 10 Conflicts that Explain the New Middle East</i> (Chapter 3).</li>
+                        <li><strong>Rogerson, B.:</strong> <i>The House Divided: Sunni, Shia and the Making of the Middle East</i>.</li>
+                    </ul>
+                </div>
+
+                <div class="intel-block warning">
+                    <strong>Primary Outlets & Media Archives:</strong>
+                    <ul style="margin-left: 18px; margin-top: 6px; line-height: 1.6;">
+                        <li><strong>Primary Sources:</strong> Official Houthi (Ansar Allah) Statements & Media Outlets.</li>
+                        <li><strong>News Networks & Video:</strong> Al Jazeera Media Network, YouTube Video Exhibits & Getty Images.</li>
+                        <li><strong>Search Engine & Information Retrieval:</strong> Google Search & Google Earth Services.</li>
+                    </ul>
+                </div>
+
+                <div class="intel-block amber">
+                    <strong>Cartographic Archives & Basemaps:</strong>
+                    <ul style="margin-left: 18px; margin-top: 6px; line-height: 1.6;">
+                        <li><strong>CIA Historical Maps:</strong> Perry-Castañeda Library Map Collection (University of Texas at Austin).</li>
+                        <li><strong>Spatial GIS Layers:</strong> Esri World Dark Gray Canvas & Public Domain Country GeoJSON.</li>
+                    </ul>
+                </div>
+
+                <div class="intel-block purple">
+                    <strong>AI Educational Development:</strong>
+                    This interactive map presentation and GEOINT dossier framework were structured, curated, and coded with the assistance of <strong>Artificial Intelligence (AI)</strong>.
+                </div>`,
+                coords: [15.3694, 44.1910], zoom: 5,
+                markers: [],
+                lines: []
+            }
+        ];
+
+        let currentSlide = 0;
+        let activeMarkersLayer = L.layerGroup().addTo(map);
+        let activeLinesLayer = L.layerGroup().addTo(map);
+
+        function updateSlide(index) {
+            const slide = slides[index];
+
+            map.flyTo(slide.coords, slide.zoom, { 
+                duration: 1.6, 
+                easeLinearity: 0.25,
+                noMoveStart: true 
+            });
+
+            document.getElementById('phaseTag').innerText = slide.phase;
+            document.getElementById('slideTitle').innerText = slide.title;
+            document.getElementById('slideSubtitle').innerText = slide.subtitle;
+            document.getElementById('slideContent').innerHTML = slide.content;
+            document.getElementById('slideCounter').innerText = `${index + 1 < 10 ? '0' : ''}${index + 1} / ${slides.length < 10 ? '0' : ''}${slides.length}`;
+            
+            // Hide PREV button on first slide
+            const prevBtn = document.getElementById('prevBtn');
+            if (index === 0) {
+                prevBtn.style.visibility = 'hidden';
+            } else {
+                prevBtn.style.visibility = 'visible';
+            }
+
+            const videoBox = document.getElementById('videoBox');
+            if (slide.video && slide.video.trim() !== "") {
+                videoBox.style.display = 'block';
+                videoBox.innerHTML = slide.video;
+            } else {
+                videoBox.style.display = 'none';
+                videoBox.innerHTML = '';
+            }
+
+            // Always close CIA map viewer when switching slides
+            closeCiaMap();
+
+            const progressPercent = ((index + 1) / slides.length) * 100;
+            document.getElementById('progressBar').style.width = `${progressPercent}%`;
+
+            activeMarkersLayer.clearLayers();
+            activeLinesLayer.clearLayers();
+
+            if (slide.lines) {
+                slide.lines.forEach(l => {
+                    const polyline = L.polyline(l.coords, {
+                        className: l.colorClass,
+                        weight: 3.5,
+                        opacity: 0.95
+                    });
+                    activeLinesLayer.addLayer(polyline);
+                });
+            }
+
+            slide.markers.forEach(m => {
+                let icon;
+                if (m.type === 'flame') {
+                    icon = L.divIcon({ className: '', html: `<i class="fa-solid fa-fire flame-marker"></i>`, iconSize: [32, 32], iconAnchor: [16, 16] });
+                } else if (m.type === 'flag') {
+                    const fallback = m.fallbackImg ? `onerror="this.src='${m.fallbackImg}';"` : '';
+                    icon = L.divIcon({ 
+                        className: '', 
+                        html: `<img src="${m.img}" class="flag-avatar" alt="Flag" ${fallback}>`, 
+                        iconSize: [50, 32], 
+                        iconAnchor: [25, 16] 
+                    });
+                } else {
+                    icon = L.divIcon({ 
+                        className: '', 
+                        html: `<img src="${m.img}" class="leader-avatar" alt="Leader" onerror="this.outerHTML='<div class=\\'leader-avatar-fallback\\'><i class=\\'fa-solid fa-user-shield\\'></i></div>';">`, 
+                        iconSize: [52, 52], 
+                        iconAnchor: [26, 26] 
+                    });
+                }
+
+                const marker = L.marker([m.lat, m.lng], { icon: icon });
+                if (m.label) {
+                    marker.bindTooltip(m.label, { permanent: true, direction: 'right', offset: [15, 0], className: 'city-label' });
+                }
+                activeMarkersLayer.addLayer(marker);
+            });
+        }
+
+        function nextSlide() { if (currentSlide < slides.length - 1) { currentSlide++; updateSlide(currentSlide); } }
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlide(currentSlide); } }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'Escape') {
+                closeExhibitModal();
+                closeVideoModal();
+                closeCiaMap();
+            }
+        });
+
+        updateSlide(0);
+    </script>
+</body>
+</html>
