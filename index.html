@@ -11,6 +11,8 @@
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- YouTube Iframe API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -553,22 +555,31 @@
             document.getElementById('videoModal').style.display = 'flex';
         }
 
-        var shortTimer = null;
+                var specialPlayer = null;
 
         function openSpecialShortModal(youtubeId, titleText) {
             document.getElementById('thankYouOverlay').style.display = 'none';
             document.getElementById('videoModalTitle').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ' + titleText;
-            
+
             var iframe = document.getElementById('videoModalIframe');
-            iframe.src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1";
+            iframe.src = "https://www.youtube.com/embed/" + youtubeId + "?enablejsapi=1&autoplay=1";
             document.getElementById('videoModal').style.display = 'flex';
 
-            if (shortTimer) clearTimeout(shortTimer);
-            shortTimer = setTimeout(function() {
-                if (document.getElementById('videoModal').style.display === 'flex') {
-                    document.getElementById('thankYouOverlay').style.display = 'flex';
+            // Collega l'API di YouTube per rilevare la fine del video (State 0 = ENDED)
+            if (window.YT && window.YT.Player) {
+                if (specialPlayer) {
+                    try { specialPlayer.destroy(); } catch(e){}
                 }
-            }, 18000);
+                specialPlayer = new YT.Player('videoModalIframe', {
+                    events: {
+                        'onStateChange': function(event) {
+                            if (event.data === 0) { // 0 equivale a video terminato
+                                document.getElementById('thankYouOverlay').style.display = 'flex';
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         function closeVideoModal(e) {
@@ -576,10 +587,11 @@
                 document.getElementById('videoModalIframe').src = "";
                 document.getElementById('thankYouOverlay').style.display = 'none';
                 document.getElementById('videoModal').style.display = 'none';
-                if (shortTimer) clearTimeout(shortTimer);
+                if (specialPlayer) {
+                    try { specialPlayer.destroy(); } catch(e){}
+                }
             }
         }
-
         function openCiaMap(imgSrc, titleText) {
             document.getElementById('intelMapImg').src = imgSrc;
             document.getElementById('intelViewerTitle').innerHTML = '<i class="fa-solid fa-map-location-dot"></i> ' + titleText;
