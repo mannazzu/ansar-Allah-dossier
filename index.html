@@ -412,19 +412,24 @@
         </div>
     </div>
 
-    <!-- UNIVERSAL VIDEO / SHORTS POP-UP MODAL WITH OVERLAY -->
+        <!-- POP-UP MODAL CON PLAYER VIDEO HTML5 LOCALE -->
     <div id="videoModal" class="generic-modal" onclick="closeVideoModal(event)">
         <div class="generic-modal-content" onclick="event.stopPropagation()" style="max-width: 540px; border-color: #ff2a5f; box-shadow: 0 0 40px rgba(255, 42, 95, 0.4);">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,42,95,0.4); padding-bottom: 10px; margin-bottom: 15px;">
                 <span id="videoModalTitle" style="font-family: 'JetBrains Mono', monospace; color: #ff2a5f; font-weight: 800; font-size: 13px; letter-spacing: 1.5px;">
-                    <i class="fa-solid fa-circle-play"></i> VIDEO EXHIBIT
+                    <i class="fa-solid fa-triangle-exclamation"></i> DO NOT PRESS
                 </span>
                 <button onclick="closeVideoModal()" style="background: none; border: none; color: #ff2a5f; font-size: 22px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 800;">[X]</button>
             </div>
             <div style="width: 100%; height: 510px; border-radius: 6px; overflow: hidden; border: 1.5px solid #ff2a5f; background: #000; position: relative;">
-                <iframe id="videoModalIframe" src="" style="width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 
-                <!-- AUTOMATIC OVERLAY AT VIDEO END -->
+                <!-- LETTORE VIDEO MP4 NATIVO -->
+                <video id="localVideoPlayer" style="width: 100%; height: 100%; object-fit: contain;" controls playsinline>
+                    <source src="closing_video.mp4" type="video/mp4">
+                    Il browser non supporta il riproduttore video.
+                </video>
+
+                <!-- OVERLAY THANK YOU A FINE RIPRODUZIONE -->
                 <div id="thankYouOverlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(4, 7, 13, 0.96); color: #00f0ff; font-family: 'Space Grotesk', sans-serif; font-size: 42px; font-weight: 800; letter-spacing: 4px; align-items: center; justify-content: center; flex-direction: column; z-index: 10; text-shadow: 0 0 20px #00f0ff, 0 0 40px #00f0ff;">
                     <div>THANK YOU</div>
                     <div style="font-size: 13px; font-family: 'JetBrains Mono', monospace; color: #ff2a5f; margin-top: 12px; letter-spacing: 2px;">[ END OF PRESENTATION ]</div>
@@ -556,34 +561,38 @@
             }
         }
 
-               function openSpecialShortModal(youtubeId, titleText) {
-            // 1. Reset overlay e imposta titolo
+                      function openSpecialShortModal(youtubeId, titleText) {
             const overlay = document.getElementById('thankYouOverlay');
             if (overlay) overlay.style.display = 'none';
-            
-            document.getElementById('videoModalTitle').innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${titleText}`;
-            
-            // 2. Carica il video YouTube Short nell'iframe
-            const iframe = document.getElementById('videoModalIframe');
-            iframe.src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1";
-            
-            // 3. Mostra la finestra popup
-            document.getElementById('videoModal').style.display = 'flex';
 
-            // 4. Mostra la scritta THANK YOU dopo 18 secondi (durata dello Short)
-            setTimeout(() => {
-                if (overlay && document.getElementById('videoModal').style.display === 'flex') {
-                    overlay.style.display = 'flex';
-                }
-            }, 18000);
+            const modal = document.getElementById('videoModal');
+            const video = document.getElementById('localVideoPlayer');
+
+            if (modal) modal.style.display = 'flex';
+
+            if (video) {
+                video.currentTime = 0;
+                video.play().catch(err => console.log("Autoplay bloccato:", err));
+
+                // Rileva la fine del video MP4 e mostra l'overlay "THANK YOU"
+                video.onended = function() {
+                    if (overlay) overlay.style.display = 'flex';
+                };
+            }
         }
 
         function closeVideoModal(e) {
             if (!e || e.target.id === 'videoModal' || e.target.tagName === 'BUTTON') {
-                document.getElementById('videoModalIframe').src = "";
+                const video = document.getElementById('localVideoPlayer');
+                if (video) {
+                    video.pause();
+                    video.currentTime = 0;
+                }
                 const overlay = document.getElementById('thankYouOverlay');
                 if (overlay) overlay.style.display = 'none';
-                document.getElementById('videoModal').style.display = 'none';
+
+                const modal = document.getElementById('videoModal');
+                if (modal) modal.style.display = 'none';
             }
         }
 
