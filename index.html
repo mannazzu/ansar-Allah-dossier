@@ -25,7 +25,6 @@
 
         #map { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
 
-        /* TOP PROGRESS BAR */
         .progress-bar-container {
             position: absolute;
             top: 0;
@@ -43,7 +42,6 @@
             transition: width 0.35s ease-out;
         }
 
-        /* LIVE GPS TICKER */
         .gps-ticker {
             position: absolute;
             top: 20px;
@@ -73,7 +71,6 @@
         }
         @keyframes blink { 0% { opacity: 0.3; } 100% { opacity: 1; } }
 
-        /* INTEL OVERLAY CARD */
         .info-card {
             position: absolute;
             top: 24px;
@@ -155,7 +152,6 @@
         }
         .video-container iframe { width: 100%; height: 100%; border: none; }
 
-        /* MODULAR INTEL BLOCKS */
         .intel-block {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.12);
@@ -250,7 +246,6 @@
             box-shadow: 0 0 20px rgba(255, 42, 95, 0.7);
         }
 
-        /* POP-UP MODAL VISOR FOR EXHIBITS & VIDEOS */
         .generic-modal {
             display: none;
             position: fixed;
@@ -272,7 +267,6 @@
             position: relative;
         }
 
-        /* CIA MAP VIEWER (MANUAL HUD TOGGLE) */
         .intel-map-viewer {
             position: absolute;
             top: 70px;
@@ -463,7 +457,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        const map = L.map('map', { 
+        var map = L.map('map', { 
             zoomControl: false,
             preferCanvas: true,
             fadeAnimation: true,
@@ -471,21 +465,21 @@
             markerZoomAnimation: true
         }).setView([14.8, 46.0], 6);
 
-        const darkLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        var darkLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Esri Dark Gray', 
             maxZoom: 16,
             keepBuffer: 6
         }).addTo(map);
 
-        map.on('move', () => {
-            const center = map.getCenter();
+        map.on('move', function() {
+            var center = map.getCenter();
             document.getElementById('latVal').innerText = center.lat.toFixed(3);
             document.getElementById('lngVal').innerText = center.lng.toFixed(3);
         });
 
         function getCountryColor(name) {
             if (!name) return '#334155';
-            const n = name.toLowerCase();
+            var n = name.toLowerCase();
             if (n.includes('yemen')) return '#d90429';
             if (n.includes('saudi')) return '#10b981';
             if (n.includes('iran')) return '#7209b7';
@@ -508,7 +502,7 @@
             L.geoJSON(geojson, {
                 smoothFactor: 1.5,
                 style: function(feature) {
-                    const name = feature.properties.ADMIN || feature.properties.NAME || feature.properties.name || feature.properties.sovereignt || "";
+                    var name = feature.properties.ADMIN || feature.properties.NAME || feature.properties.name || feature.properties.sovereignt || "";
                     return { 
                         fillColor: getCountryColor(name), 
                         weight: 2, 
@@ -518,9 +512,9 @@
                     };
                 },
                 onEachFeature: function(feature, layer) {
-                    const name = feature.properties.ADMIN || feature.properties.NAME || feature.properties.name || "";
-                    const targetCountries = ['Yemen', 'Saudi Arabia', 'Iran', 'Israel', 'Egypt', 'United Arab Emirates', 'Oman', 'Sudan', 'Eritrea', 'Ethiopia', 'Somalia'];
-                    if (targetCountries.some(tc => name.toLowerCase().includes(tc.toLowerCase()))) {
+                    var name = feature.properties.ADMIN || feature.properties.NAME || feature.properties.name || "";
+                    var targetCountries = ['Yemen', 'Saudi Arabia', 'Iran', 'Israel', 'Egypt', 'United Arab Emirates', 'Oman', 'Sudan', 'Eritrea', 'Ethiopia', 'Somalia'];
+                    if (targetCountries.some(function(tc) { return name.toLowerCase().includes(tc.toLowerCase()); })) {
                         layer.bindTooltip(name.toUpperCase(), { 
                             permanent: true, 
                             direction: 'center', 
@@ -532,12 +526,12 @@
         }
 
         fetch('https://rawcdn.githack.com/datasets/geo-countries/master/data/countries.geojson')
-            .then(res => res.json())
-            .then(data => renderRisikoLayer(data))
-            .catch(() => {
+            .then(function(res) { return res.json(); })
+            .then(function(data) { renderRisikoLayer(data); })
+            .catch(function() {
                 fetch('https://cdn.jsdelivr.net/gh/datasets/geo-countries@master/data/countries.geojson')
-                    .then(res => res.json())
-                    .then(data => renderRisikoLayer(data));
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) { renderRisikoLayer(data); });
             });
 
         function openExhibitModal(imgFile, titleText) {
@@ -559,13 +553,13 @@
             document.getElementById('videoModal').style.display = 'flex';
         }
 
-        let shortTimer = null;
+        var shortTimer = null;
 
         function openSpecialShortModal(youtubeId, titleText) {
             document.getElementById('thankYouOverlay').style.display = 'none';
             document.getElementById('videoModalTitle').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ' + titleText;
             
-            const iframe = document.getElementById('videoModalIframe');
+            var iframe = document.getElementById('videoModalIframe');
             iframe.src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1";
             document.getElementById('videoModal').style.display = 'flex';
 
@@ -596,22 +590,13 @@
             document.getElementById('intelViewer').style.display = 'none';
         }
 
-        const slides = [
+        var slides = [
             {
                 phase: "PHASE 00 // HISTORICAL CONTEXT",
                 title: "The Division of Yemen: North vs. South (1967–1990)",
                 subtitle: "LOC: HISTORICAL BORDER [SANAA (YAR) vs ADEN (PDRY)]",
                 video: "",
-                content: `
-                <div class="intel-block">
-                    <strong>North Yemen (YAR - Capital: Sanaa):</strong> Conservative republic with strong Zaydi cultural influence.
-                </div>
-                <div class="intel-block warning">
-                    <strong>South Yemen (PDRY - Capital: Aden):</strong> The Arab world's only Marxist-Leninist socialist state.
-                </div>
-                <div class="intel-block amber">
-                    <strong>1990 Unification & 1994 War:</strong> Unified in 1990; despite this, the South made several secession attempts, which the North repeatedly suppressed, fueling decades of Southern resentment.
-                </div>`,
+                content: '<div class="intel-block"><strong>North Yemen (YAR - Capital: Sanaa):</strong> Conservative republic with strong Zaydi cultural influence.</div><div class="intel-block warning"><strong>South Yemen (PDRY - Capital: Aden):</strong> The Arab world\'s only Marxist-Leninist socialist state.</div><div class="intel-block amber"><strong>1990 Unification & 1994 War:</strong> Unified in 1990; despite this, the South made several secession attempts, which the North repeatedly suppressed, fueling decades of Southern resentment.</div>',
                 coords: [14.8, 46.0], zoom: 6,
                 markers: [
                     { lat: 15.3694, lng: 44.1910, type: "flag", img: "flag-yemen-arab-republic-north-yemen-flag-yemen-arab-republic-also-known-as-north-yemen-its-capital-was-sana-d-131899923.jpg.webp", fallbackImg: "Flag_of_the_Yemen_Arab_Republic.svg", label: "NORTH YEMEN (YAR - SANAA)" },
@@ -626,36 +611,7 @@
                 title: "Zaydi Revivalism & The Saada Wars (2002–2010)",
                 subtitle: "LOC: SAADA HIGHLANDS [16.94° N, 43.76° E]",
                 video: "", 
-                content: `
-                <div style="display: flex; align-items: center; gap: 12px; background: rgba(0,240,255,0.08); padding: 10px; border-radius: 5px; border-left: 4px solid #00f0ff;">
-                    <img src="hussein.jpg" style="width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid #00f0ff; object-fit: cover;" alt="Hussein al-Houthi">
-                    <div>
-                        <strong style="color: #00f0ff; font-size: 13.5px; display: block;">HUSSEIN BADREDDIN AL-HOUTHI</strong>
-                        <span style="font-size: 11px; color: #a0aec0; font-family: 'JetBrains Mono', monospace;">Founder of Believing Youth (Killed 2004)</span>
-                    </div>
-                </div>
-
-                <div class="intel-block warning">
-                    <strong>The Sarkha ("The Scream"):</strong> Adopted in 2002 after the US invasion of Iraq: <i>"God is Greatest, Death to America, Death to Israel, A Curse Upon the Jews, Victory to Islam"</i>.
-                </div>
-
-                <div class="intel-block amber">
-                    <strong>Anti-Wahhabi Roots & First Border Clash (2009):</strong> Born as a Zaydi defensive reaction against Saudi-funded Wahhabi proselytism in Sa'da. In 2009 (6th Saada War), Houthi fighters crossed into Jizan, triggering Saudi Arabia's first direct military intervention.
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="openExhibitModal('sarkha_banner.jpg', 'THE SARKHA SLOGAN BANNER')" class="sarkha-link-btn" style="flex: 1;">
-                            <i class="fa-solid fa-image"></i> [SLOGAN BANNER]
-                        </button>
-                        <button onclick="openExhibitModal('sarkha_protest.jpg', 'SARKHA MASS RALLY PROTEST')" class="sarkha-link-btn" style="flex: 1; border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);">
-                            <i class="fa-solid fa-users"></i> [MASS RALLY]
-                        </button>
-                    </div>
-                    <button onclick="openCiaMap('yemen_physio-2012.jpg', 'CIA PHYSIOGRAPHY & TOPOGRAPHY MAP (2012)')" class="sarkha-link-btn" style="border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);">
-                        <i class="fa-solid fa-map-location-dot"></i> [VIEW CIA PHYSICAL MAP]
-                    </button>
-                </div>`,
+                content: '<div style="display: flex; align-items: center; gap: 12px; background: rgba(0,240,255,0.08); padding: 10px; border-radius: 5px; border-left: 4px solid #00f0ff;"><img src="hussein.jpg" style="width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid #00f0ff; object-fit: cover;" alt="Hussein al-Houthi"><div><strong style="color: #00f0ff; font-size: 13.5px; display: block;">HUSSEIN BADREDDIN AL-HOUTHI</strong><span style="font-size: 11px; color: #a0aec0; font-family: \'JetBrains Mono\', monospace;">Founder of Believing Youth (Killed 2004)</span></div></div><div class="intel-block warning"><strong>The Sarkha ("The Scream"):</strong> Adopted in 2002 after the US invasion of Iraq: <i>"God is Greatest, Death to America, Death to Israel, A Curse Upon the Jews, Victory to Islam"</i>.</div><div class="intel-block amber"><strong>Anti-Wahhabi Roots & First Border Clash (2009):</strong> Born as a Zaydi defensive reaction against Saudi-funded Wahhabi proselytism in Sa\'da. In 2009 (6th Saada War), Houthi fighters crossed into Jizan, triggering Saudi Arabia\'s first direct military intervention.</div><div style="display: flex; flex-direction: column; gap: 6px;"><div style="display: flex; gap: 8px;"><button onclick="openExhibitModal(\'sarkha_banner.jpg\', \'THE SARKHA SLOGAN BANNER\')" class="sarkha-link-btn" style="flex: 1;"><i class="fa-solid fa-image"></i> [SLOGAN BANNER]</button><button onclick="openExhibitModal(\'sarkha_protest.jpg\', \'SARKHA MASS RALLY PROTEST\')" class="sarkha-link-btn" style="flex: 1; border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);"><i class="fa-solid fa-users"></i> [MASS RALLY]</button></div><button onclick="openCiaMap(\'yemen_physio-2012.jpg\', \'CIA PHYSIOGRAPHY & TOPOGRAPHY MAP (2012)\')" class="sarkha-link-btn" style="border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);"><i class="fa-solid fa-map-location-dot"></i> [VIEW CIA PHYSICAL MAP]</button></div>',
                 coords: [16.9401, 43.7629], zoom: 8,
                 markers: [
                     { lat: 16.9401, lng: 43.7629, type: "leader", img: "hussein.jpg", label: "SAADA: HUSSEIN AL-HOUTHI (FOUNDER, KILLED 2004)" },
@@ -670,38 +626,7 @@
                 title: "Arab Spring, Hadi's Rise & The Seizure of Sanaa (2011–2014)",
                 subtitle: "LOC: SANAA CAPITAL [15.36° N, 44.19° E]",
                 video: "",
-                content: `
-                <div class="intel-block">
-                    <strong>Arab Spring & Saleh's Resignation (2011–2012):</strong> Mass protests forced Saleh to resign in exchange for immunity. Vice President <strong>Abdrabbuh Mansur Hadi</strong> assumed interim presidency.
-                </div>
-                <div class="intel-block amber">
-                    <strong>Fuel Subsidy Crisis (July 2014):</strong> Fuel subsidy cuts (+60%–90% price hikes) triggered mass public anger. Ansar Allah leveraged social discontent to position itself as a national populist movement.
-                </div>
-                <div class="intel-block warning">
-                    <strong>Tactical Alliance & Sanaa Coup (Sept 2014):</strong> Seeking revenge, Saleh allied his loyalist Republican Guard troops with the Houthis. On Sept 21, 2014, joint forces occupied ministries and seized Sanaa.
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="openExhibitModal('2011–2012_Yemeni_revolution_(from_Al_Jazeera)_-_20110301-14.jpg', 'YEMEN ARAB SPRING PROTESTS (2011)')" class="sarkha-link-btn" style="flex: 1; border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);">
-                            <i class="fa-solid fa-flag"></i> [2011 ARAB SPRING PROTESTS]
-                        </button>
-                        <button onclick="openExhibitModal('0605_Yemen.jpg', 'SANAA MASS FUEL PROTESTS (2014)')" class="sarkha-link-btn" style="flex: 1; border-color: #ffb703; color: #ffb703; background: rgba(255,183,3,0.08);">
-                            <i class="fa-solid fa-users-line"></i> [SANAA FUEL PROTESTS]
-                        </button>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="openExhibitModal('61385a5a-85e3-1c2a-87a1-30442cd16461.webp', 'ADEN FUEL & POWER PROTESTS')" class="sarkha-link-btn" style="flex: 1; border-color: #ffb703; color: #ffb703; background: rgba(255,183,3,0.08);">
-                            <i class="fa-solid fa-fire"></i> [ADEN FUEL PROTESTS]
-                        </button>
-                        <button onclick="openExhibitModal('afaew.jpeg', 'HOUTHI PROPAGANDA: SEPT 21 REVOLUTION (2014)')" class="sarkha-link-btn" style="flex: 1; border-color: #ff2a5f; color: #ff2a5f; background: rgba(255,42,95,0.08);">
-                            <i class="fa-solid fa-bullhorn"></i> [HOUTHI PROPAGANDA]
-                        </button>
-                    </div>
-                    <button onclick="openCiaMap('yemen_admin_2012.jpg', 'CIA ADMINISTRATIVE DIVISIONS MAP (2012)')" class="sarkha-link-btn" style="border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);">
-                        <i class="fa-solid fa-map-location-dot"></i> [VIEW CIA ADMINISTRATIVE MAP]
-                    </button>
-                </div>`,
+                content: '<div class="intel-block"><strong>Arab Spring & Saleh\'s Resignation (2011–2012):</strong> Mass protests forced Saleh to resign in exchange for immunity. Vice President <strong>Abdrabbuh Mansur Hadi</strong> assumed interim presidency.</div><div class="intel-block amber"><strong>Fuel Subsidy Crisis (July 2014):</strong> Fuel subsidy cuts (+60%–90% price hikes) triggered mass public anger. Ansar Allah leveraged social discontent to position itself as a national populist movement.</div><div class="intel-block warning"><strong>Tactical Alliance & Sanaa Coup (Sept 2014):</strong> Seeking revenge, Saleh allied his loyalist Republican Guard troops with the Houthis. On Sept 21, 2014, joint forces occupied ministries and seized Sanaa.</div><div style="display: flex; flex-direction: column; gap: 6px;"><div style="display: flex; gap: 8px;"><button onclick="openExhibitModal(\'2011–2012_Yemeni_revolution_(from_Al_Jazeera)_-_20110301-14.jpg\', \'YEMEN ARAB SPRING PROTESTS (2011)\')" class="sarkha-link-btn" style="flex: 1; border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);"><i class="fa-solid fa-flag"></i> [2011 ARAB SPRING PROTESTS]</button><button onclick="openExhibitModal(\'0605_Yemen.jpg\', \'SANAA MASS FUEL PROTESTS (2014)\')" class="sarkha-link-btn" style="flex: 1; border-color: #ffb703; color: #ffb703; background: rgba(255,183,3,0.08);"><i class="fa-solid fa-users-line"></i> [SANAA FUEL PROTESTS]</button></div><div style="display: flex; gap: 8px;"><button onclick="openExhibitModal(\'61385a5a-85e3-1c2a-87a1-30442cd16461.webp\', \'ADEN FUEL & POWER PROTESTS\')" class="sarkha-link-btn" style="flex: 1; border-color: #ffb703; color: #ffb703; background: rgba(255,183,3,0.08);"><i class="fa-solid fa-fire"></i> [ADEN FUEL PROTESTS]</button><button onclick="openExhibitModal(\'afaew.jpeg\', \'HOUTHI PROPAGANDA: SEPT 21 REVOLUTION (2014)\')" class="sarkha-link-btn" style="flex: 1; border-color: #ff2a5f; color: #ff2a5f; background: rgba(255,42,95,0.08);"><i class="fa-solid fa-bullhorn"></i> [HOUTHI PROPAGANDA]</button></div><button onclick="openCiaMap(\'yemen_admin_2012.jpg\', \'CIA ADMINISTRATIVE DIVISIONS MAP (2012)\')" class="sarkha-link-btn" style="border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);"><i class="fa-solid fa-map-location-dot"></i> [VIEW CIA ADMINISTRATIVE MAP]</button></div>',
                 coords: [15.3694, 44.1910], zoom: 9,
                 markers: [
                     { lat: 15.3694, lng: 44.1910, type: "leader", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Abdul-Malik_al-Houthi.jpg/220px-Abdul-Malik_al-Houthi.jpg", label: "SANAA: ABDUL-MALIK AL-HOUTHI & SALEH FORCES" }
@@ -715,30 +640,7 @@
                 title: "Hadi's Escape, Saudi Intervention & Saleh's Execution (2015–2017)",
                 subtitle: "LOC: SANAA TO ADEN & RIYADH",
                 video: "",
-                content: `
-                <div class="intel-block">
-                    <strong>Hadi's Escape & UN Appeal (2015):</strong> Placed under house arrest in Sanaa, Hadi escaped disguised to Aden (Feb) and fled to Riyadh (March), invoking UN Charter Art. 51 to request international military assistance.
-                </div>
-                <div class="intel-block warning">
-                    <strong>Saudi Intervention Launched (March 2015):</strong> Riyadh formed a 10-nation coalition and launched Operation <i>Decisive Storm</i> to prevent an Iranian-aligned proxy state on its southern border.
-                </div>
-                <div class="intel-block amber">
-                    <strong>Breakup & Execution of Saleh (Dec 2017):</strong> Saleh announced a split with the Houthis to negotiate with the Saudis. Houthis branded it high treason, ambushed his convoy, and executed him 2 days later, consolidating total control over Sanaa.
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="openExhibitModal('1536x864_302936.jpg.webp', 'PRESIDENT HADI & MBS IN RIYADH (2015)')" class="sarkha-link-btn" style="flex: 1; border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);">
-                            <i class="fa-solid fa-handshake"></i> [PRESIDENT HADI & MBS IN RIYADH]
-                        </button>
-                        <button onclick="openExhibitModal('yemen-coup.jpg.avif', 'OPERATION DECISIVE STORM: AIRSTRIKES (2015)')" class="sarkha-link-btn" style="flex: 1; border-color: #ff2a5f; color: #ff2a5f; background: rgba(255,42,95,0.08);">
-                            <i class="fa-solid fa-bomb"></i> [OPERATION DECISIVE STORM: AIRSTRIKES]
-                        </button>
-                    </div>
-                    <button onclick="openExhibitModal('gettyimages-838175754-7433527e105f9a9e7efb6c57d21cd2e2d1f04a82.jpg', 'SALEH FINAL SPEECH & BREAK WITH HOUTHIS (DEC 2017)')" class="sarkha-link-btn" style="border-color: #ffb703; color: #ffb703; background: rgba(255,183,3,0.08);">
-                        <i class="fa-solid fa-microphone"></i> [SALEH FINAL SPEECH & BREAK]
-                    </button>
-                </div>`,
+                content: '<div class="intel-block"><strong>Hadi\'s Escape & UN Appeal (2015):</strong> Placed under house arrest in Sanaa, Hadi escaped disguised to Aden (Feb) and fled to Riyadh (March), invoking UN Charter Art. 51 to request international military assistance.</div><div class="intel-block warning"><strong>Saudi Intervention Launched (March 2015):</strong> Riyadh formed a 10-nation coalition and launched Operation <i>Decisive Storm</i> to prevent an Iranian-aligned proxy state on its southern border.</div><div class="intel-block amber"><strong>Breakup & Execution of Saleh (Dec 2017):</strong> Saleh announced a split with the Houthis to negotiate with the Saudis. Houthis branded it high treason, ambushed his convoy, and executed him 2 days later, consolidating total control over Sanaa.</div><div style="display: flex; flex-direction: column; gap: 6px;"><div style="display: flex; gap: 8px;"><button onclick="openExhibitModal(\'1536x864_302936.jpg.webp\', \'PRESIDENT HADI & MBS IN RIYADH (2015)\')" class="sarkha-link-btn" style="flex: 1; border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);"><i class="fa-solid fa-handshake"></i> [PRESIDENT HADI & MBS IN RIYADH]</button><button onclick="openExhibitModal(\'yemen-coup.jpg.avif\', \'OPERATION DECISIVE STORM: AIRSTRIKES (2015)\')" class="sarkha-link-btn" style="flex: 1; border-color: #ff2a5f; color: #ff2a5f; background: rgba(255,42,95,0.08);"><i class="fa-solid fa-bomb"></i> [OPERATION DECISIVE STORM: AIRSTRIKES]</button></div><button onclick="openExhibitModal(\'gettyimages-838175754-7433527e105f9a9e7efb6c57d21cd2e2d1f04a82.jpg\', \'SALEH FINAL SPEECH & BREAK WITH HOUTHIS (DEC 2017)\')" class="sarkha-link-btn" style="border-color: #ffb703; color: #ffb703; background: rgba(255,183,3,0.08);"><i class="fa-solid fa-microphone"></i> [SALEH FINAL SPEECH & BREAK]</button></div>',
                 coords: [18.0, 45.0], zoom: 6,
                 markers: [
                     { lat: 15.3694, lng: 44.1910, type: "leader", img: "Nicole_Fontaine_and_Ali_Abdullah_Saleh,_2000_(1)_(cropped2).jpg", label: "SANAA: SALEH EXECUTION ZONE (DEC 2017)" },
@@ -755,17 +657,7 @@
                 title: "Asymmetric Counterstrikes & Long-Range Capabilities (2015–2019)",
                 subtitle: "LAUNCH VECTORS: SAUDI INFRASTRUCTURE & ARAMCO",
                 video: "", 
-                content: `
-                <div class="intel-block">
-                    <strong>Asymmetric Defense Strategy:</strong> Facing Saudi air superiority, Ansar Allah adapted through underground fortification, mobile launch units, and technical support from IRGC and Hezbollah advisors.
-                </div>
-                <div class="intel-block warning">
-                    <strong>Long-Range Missile & Drone Vectors:</strong> Houthis escalated cross-border strikes against Saudi infrastructure, targeting King Khalid Air Base in Khamis Mushait and launching 
-                    <a href="javascript:void(0)" onclick="openVideoModal('0wt4Kx91mlY', 'RAJUM DRONE FOOTAGE')" style="color: #00f0ff; font-weight: 800; text-decoration: underline;">Rajum Drones</a> toward Riyadh.
-                </div>
-                <div class="intel-block amber">
-                    <strong>The Abqaiq Aramco Shock (Sept 2019):</strong> Coordinated long-range drone and cruise missile strikes temporarily knocked out 50% of Saudi oil production, demonstrating unprecedented strategic leverage.
-                </div>`,
+                content: '<div class="intel-block"><strong>Asymmetric Defense Strategy:</strong> Facing Saudi air superiority, Ansar Allah adapted through underground fortification, mobile launch units, and technical support from IRGC and Hezbollah advisors.</div><div class="intel-block warning"><strong>Long-Range Missile & Drone Vectors:</strong> Houthis escalated cross-border strikes against Saudi infrastructure, targeting King Khalid Air Base in Khamis Mushait and launching <a href="javascript:void(0)" onclick="openVideoModal(\'0wt4Kx91mlY\', \'RAJUM DRONE FOOTAGE\')" style="color: #00f0ff; font-weight: 800; text-decoration: underline;">Rajum Drones</a> toward Riyadh.</div><div class="intel-block amber"><strong>The Abqaiq Aramco Shock (Sept 2019):</strong> Coordinated long-range drone and cruise missile strikes temporarily knocked out 50% of Saudi oil production, demonstrating unprecedented strategic leverage.</div>',
                 coords: [22.0, 46.5], zoom: 6,
                 markers: [
                     { lat: 24.7136, lng: 46.6753, type: "flag", img: "Flag_of_Saudi_Arabia.svg", fallbackImg: "Flag_of_Saudi_Arabia.png", label: "RIYADH: SAUDI COALITION COMMAND" },
@@ -782,18 +674,7 @@
                 title: "October 7 & Gaza Solidarity: The Strategy Behind Maritime Blockade",
                 subtitle: "LOC: RED SEA VECTOR [SANAA TO TEL AVIV & GAZA]",
                 video: "",
-                content: `
-                <div class="intel-block warning">
-                    <strong>October 7 Catalyst & Gaza Solidarity:</strong> Following Hamas's October 7, 2023 attacks and Israel's military operation in Gaza, Ansar Allah declared full military solidarity with Palestine, framing the Red Sea as an active front in the "Axis of Resistance."
-                </div>
-                <div class="intel-block amber">
-                    <strong>Strategic Rationale (Why Block Bab el-Mandeb?):</strong> By targeting Israeli-linked and Western commercial shipping in Bab el-Mandeb, the Houthis weaponize global economic chokepoints to demand an immediate Gaza ceasefire, elevating their domestic legitimacy and regional standing.
-                </div>
-                <div class="intel-block">
-                    <strong>Direct Long-Range Escalation & Tel Aviv Strike (July 2024):</strong> Beyond maritime attacks, Houthis launched a long-range 
-                    <a href="javascript:void(0)" onclick="openVideoModal('hFCKAeeC02E', 'SAMAD-3 LONG-RANGE DRONE STRIKE')" style="color: #ff2a5f; font-weight: 800; text-decoration: underline;">Samad-3 Drone</a> striking central Tel Aviv (2,600 km), triggering Israeli Air Force retaliation 
-                    (<a href="javascript:void(0)" onclick="openVideoModal('rgtG6c29zGQ', 'OPERATION OUTSTRETCHED ARM - HODEIDAH COUNTERSTRIKE')" style="color: #00f0ff; font-weight: 800; text-decoration: underline;">Operation Outstretched Arm</a>) against oil storage facilities in Hodeidah Port.
-                </div>`,
+                content: '<div class="intel-block warning"><strong>October 7 Catalyst & Gaza Solidarity:</strong> Following Hamas\'s October 7, 2023 attacks and Israel\'s military operation in Gaza, Ansar Allah declared full military solidarity with Palestine, framing the Red Sea as an active front in the "Axis of Resistance."</div><div class="intel-block amber"><strong>Strategic Rationale (Why Block Bab el-Mandeb?):</strong> By targeting Israeli-linked and Western commercial shipping in Bab el-Mandeb, the Houthis weaponize global economic chokepoints to demand an immediate Gaza ceasefire, elevating their domestic legitimacy and regional standing.</div><div class="intel-block"><strong>Direct Long-Range Escalation & Tel Aviv Strike (July 2024):</strong> Beyond maritime attacks, Houthis launched a long-range <a href="javascript:void(0)" onclick="openVideoModal(\'hFCKAeeC02E\', \'SAMAD-3 LONG-RANGE DRONE STRIKE\')" style="color: #ff2a5f; font-weight: 800; text-decoration: underline;">Samad-3 Drone</a> striking central Tel Aviv (2,600 km), triggering Israeli Air Force retaliation (<a href="javascript:void(0)" onclick="openVideoModal(\'rgtG6c29zGQ\', \'OPERATION OUTSTRETCHED ARM - HODEIDAH COUNTERSTRIKE\')" style="color: #00f0ff; font-weight: 800; text-decoration: underline;">Operation Outstretched Arm</a>) against oil storage facilities in Hodeidah Port.</div>',
                 coords: [28.0, 38.0], zoom: 5,
                 markers: [
                     { lat: 32.0853, lng: 34.7818, type: "leader", img: "ea8fc07_ftp-1-ivl4rqovpm58-5329942-01-06.avif", label: "TEL AVIV: SAMAD-3 DRONE IMPACT ZONE" },
@@ -809,15 +690,8 @@
                 phase: "PHASE 06 // MARITIME INTERDICTION",
                 title: "Bab el-Mandeb Strategy & Galaxy Leader Hijacking",
                 subtitle: "CHOKEPOINT: BAB EL-MANDEB [12.58° N, 43.33° E]",
-                video: `<iframe src="https://www.youtube.com/embed/vbB2tQLdJiE" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`,
-                content: `
-                <div class="intel-block warning">
-                    <strong>Chokepoint Leverage (The Why):</strong> Bab el-Mandeb handles 12%–15% of global trade. Blocking this 18-mile strait weaponizes global maritime shipping to force a Gaza ceasefire and project regional power.
-                </div>
-                <div class="intel-block">
-                    <strong>Nov 19, 2023 Opening Attack:</strong> Heliborne seizure of car carrier <i>Galaxy Leader</i> off Hodeidah using 
-                    <a href="javascript:void(0)" onclick="openVideoModal('qkcmM4mcIp4', 'USV / UNCREWED SURFACE VESSELS DEPLOYMENT')" style="color: #00f0ff; font-weight: 800; text-decoration: underline;">USVs</a> and ASBMs.
-                </div>`,
+                video: '<iframe src="https://www.youtube.com/embed/vbB2tQLdJiE" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>',
+                content: '<div class="intel-block warning"><strong>Chokepoint Leverage (The Why):</strong> Bab el-Mandeb handles 12%–15% of global trade. Blocking this 18-mile strait weaponizes global maritime shipping to force a Gaza ceasefire and project regional power.</div><div class="intel-block"><strong>Nov 19, 2023 Opening Attack:</strong> Heliborne seizure of car carrier <i>Galaxy Leader</i> off Hodeidah using <a href="javascript:void(0)" onclick="openVideoModal(\'qkcmM4mcIp4\', \'USV / UNCREWED SURFACE VESSELS DEPLOYMENT\')" style="color: #00f0ff; font-weight: 800; text-decoration: underline;">USVs</a> and ASBMs.</div>',
                 coords: [12.5833, 43.3333], zoom: 8,
                 markers: [{ lat: 12.5833, lng: 43.3333, type: "flame", label: "BAB EL-MANDEB: NAVAL BLOCKADE" }],
                 lines: [
@@ -829,23 +703,7 @@
                 title: "The Axis of Resistance & Regional Alliances",
                 subtitle: "TEHRAN - SANAA - BEIRUT - BAGHDAD - GAZA",
                 video: "",
-                content: `
-                <div class="intel-block purple">
-                    <strong>The Axis of Resistance Network:</strong>
-                    An asymmetric military alliance led by Iran against US military hegemony, Israel, and pro-Western Gulf states.
-                    
-                    <div class="flag-group">
-                        <div class="flag-chip"><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/Flag_of_Iran.svg" alt="Iran"> IRAN (IRGC)</div>
-                        <div class="flag-chip"><img src="sarkha_banner.jpg" alt="Houthi Slogan"> HOUTHIS (ANSAR ALLAH)</div>
-                        <div class="flag-chip"><img src="https://upload.wikimedia.org/wikipedia/commons/2/23/Flag_of_Hezbollah.svg" alt="Hezbollah" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/8/89/Flag_of_Yemen.svg';"> HEZBOLLAH</div>
-                        <div class="flag-chip"><img src="https://upload.wikimedia.org/wikipedia/commons/f/f6/Flag_of_Iraq.svg" alt="Iraq"> IRAQI MILITIAS</div>
-                        <div class="flag-chip"><img src="hamas.png" alt="Hamas" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg';"> HAMAS</div>
-                    </div>
-                </div>
-
-                <div class="intel-block">
-                    <strong>Strategic Objective:</strong> Coordinated multi-front pressure against Western maritime routes and Israeli strategic depth.
-                </div>`,
+                content: '<div class="intel-block purple"><strong>The Axis of Resistance Network:</strong> An asymmetric military alliance led by Iran against US military hegemony, Israel, and pro-Western Gulf states.<div class="flag-group"><div class="flag-chip"><img src="https://upload.wikimedia.org/wikipedia/commons/c/ca/Flag_of_Iran.svg" alt="Iran"> IRAN (IRGC)</div><div class="flag-chip"><img src="sarkha_banner.jpg" alt="Houthi Slogan"> HOUTHIS (ANSAR ALLAH)</div><div class="flag-chip"><img src="https://upload.wikimedia.org/wikipedia/commons/2/23/Flag_of_Hezbollah.svg" alt="Hezbollah" onerror="this.src=\'https://upload.wikimedia.org/wikipedia/commons/8/89/Flag_of_Yemen.svg\';"> HEZBOLLAH</div><div class="flag-chip"><img src="https://upload.wikimedia.org/wikipedia/commons/f/f6/Flag_of_Iraq.svg" alt="Iraq"> IRAQI MILITIAS</div><div class="flag-chip"><img src="hamas.png" alt="Hamas" onerror="this.src=\'https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg\';"> HAMAS</div></div></div><div class="intel-block"><strong>Strategic Objective:</strong> Coordinated multi-front pressure against Western maritime routes and Israeli strategic depth.</div>',
                 coords: [25.0, 45.0], zoom: 5,
                 markers: [
                     { lat: 12.5833, lng: 43.3333, type: "flame", label: "BAB EL-MANDEB: ANSAR ALLAH FRONT" },
@@ -861,13 +719,7 @@
                 title: "Suez Toll Collapse & Cape Rerouting",
                 subtitle: "GLOBAL SHOCK: SUEZ CANAL & CAPE OF GOOD HOPE",
                 video: "",
-                content: `
-                <div class="intel-block warning">
-                    <strong>Suez Canal Traffic Collapse:</strong> Transit volume dropped by -67%, resulting in $6B–$7B annual revenue loss for Egypt.
-                </div>
-                <div class="intel-block amber">
-                    <strong>Cape of Good Hope Diversion:</strong> Shipping diverted around Africa (+3,500–4,000 nm, +10–14 days, +40% fuel burn), absorbing 10%–15% global fleet capacity.
-                </div>`,
+                content: '<div class="intel-block warning"><strong>Suez Canal Traffic Collapse:</strong> Transit volume dropped by -67%, resulting in $6B–$7B annual revenue loss for Egypt.</div><div class="intel-block amber"><strong>Cape of Good Hope Diversion:</strong> Shipping diverted around Africa (+3,500–4,000 nm, +10–14 days, +40% fuel burn), absorbing 10%–15% global fleet capacity.</div>',
                 coords: [5.0, 20.0], zoom: 3,
                 markers: [
                     { lat: 30.5852, lng: 32.2654, type: "flame", label: "SUEZ CANAL (-67% TRANSIT COLLAPSE)" },
@@ -891,22 +743,7 @@
                 title: "2024–2025: Western Naval Response & War of Attrition",
                 subtitle: "LOC: RED SEA & GULF OF ADEN [OPERATION PROSPERITY GUARDIAN & ASPIDES]",
                 video: "",
-                content: `
-                <div class="intel-block warning">
-                    <strong>US/UK Operation Prosperity Guardian & Strikes (Jan 2024):</strong> In response to continuous shipping attacks, a US-led coalition launched systematic airstrikes against Houthi radar, drone, and missile launch sites across Sanaa, Hodeidah, and Taiz.
-                </div>
-                <div class="intel-block">
-                    <strong>EU Operation Aspides (Feb 2024):</strong> The European Union deployed a defensive naval mission (led by Italy, France, and Greece) to escort commercial traffic in the Red Sea without conducting strikes on Yemeni soil.
-                </div>
-                <div class="intel-block amber">
-                    <strong>B-2 Stealth Strikes & Asymmetric Resilience (Late 2024–2025):</strong> The US military deployed B-2 stealth bombers against deeply fortified underground Houthi bunkers. Despite hundreds of coalition strikes, Ansar Allah sustained its blockade using low-cost USVs, drones, and anti-ship ballistic missiles.
-                </div>
-
-                <div style="display: flex; gap: 8px; margin-top: 4px;">
-                    <button onclick="openExhibitModal('Fasan-frigate-escorting-Italian-merchant-ship_@Italian-Navy-scaled.jpg', 'EU OPERATION ASPIDES: ITALIAN NAVY FRIGATE VIRGINIO FASAN ESCORTING GRIMALDI MERCHANT SHIP')" class="sarkha-link-btn" style="flex: 1; border-color: #00f0ff; color: #00f0ff; background: rgba(0, 240, 255, 0.08);">
-                        <i class="fa-solid fa-ship"></i> [EU ASPIDES MERCHANT ESCORT]
-                    </button>
-                </div>`,
+                content: '<div class="intel-block warning"><strong>US/UK Operation Prosperity Guardian & Strikes (Jan 2024):</strong> In response to continuous shipping attacks, a US-led coalition launched systematic airstrikes against Houthi radar, drone, and missile launch sites across Sanaa, Hodeidah, and Taiz.</div><div class="intel-block"><strong>EU Operation Aspides (Feb 2024):</strong> The European Union deployed a defensive naval mission (led by Italy, France, and Greece) to escort commercial traffic in the Red Sea without conducting strikes on Yemeni soil.</div><div class="intel-block amber"><strong>B-2 Stealth Strikes & Asymmetric Resilience (Late 2024–2025):</strong> The US military deployed B-2 stealth bombers against deeply fortified underground Houthi bunkers. Despite hundreds of coalition strikes, Ansar Allah sustained its blockade using low-cost USVs, drones, and anti-ship ballistic missiles.</div><div style="display: flex; gap: 8px; margin-top: 4px;"><button onclick="openExhibitModal(\'Fasan-frigate-escorting-Italian-merchant-ship_@Italian-Navy-scaled.jpg\', \'EU OPERATION ASPIDES: ITALIAN NAVY FRIGATE VIRGINIO FASAN ESCORTING GRIMALDI MERCHANT SHIP\')" class="sarkha-link-btn" style="flex: 1; border-color: #00f0ff; color: #00f0ff; background: rgba(0, 240, 255, 0.08);"><i class="fa-solid fa-ship"></i> [EU ASPIDES MERCHANT ESCORT]</button></div>',
                 coords: [14.0, 42.5], zoom: 7,
                 markers: [
                     { lat: 14.7978, lng: 42.9545, type: "flame", label: "HODEIDAH PORT: COALITION TARGET" },
@@ -923,27 +760,7 @@
                 title: "2026 Bab el-Mandeb Escalation & Strategic Risk",
                 subtitle: "TEMPORARY CONTROL, COUNTEROFFENSIVE & FLUID LEVERAGE",
                 video: "",
-                content: `
-                <div class="intel-block amber">
-                    <strong>July 2026 Shipping Embargo:</strong> Houthis declared an embargo on Saudi-linked commercial shipping following military escalation around Sana’a International Airport.
-                </div>
-                <div class="intel-block warning">
-                    <strong>September 2026 Coastal Offensive:</strong> Ansar Allah launched a rapid coastal drive, seizing Mokha port and Perim Island while advancing toward Dhubab in the Bab el-Mandeb strait.
-                </div>
-                <div class="intel-block">
-                    <strong>October 2026 Counteroffensive & Fluid Control:</strong> Saudi-backed forces reported recapturing Dhubab (Oct 5), maintaining a highly fluid tactical frontline along the Red Sea coast.
-                </div>
-                <div class="intel-block purple">
-                    <strong>Long-Range Strategic Claims:</strong> 
-                    <a href="javascript:void(0)" onclick="openVideoModal('08dG8eDzmQk', 'RIYADH AIRPORT & RABIGH STRIKES')" style="color: #ff2a5f; font-weight: 800; text-decoration: underline;">Claimed Missile Strikes</a> 
-                    on King Khalid International Airport (Riyadh) and Rabigh Oil Refinery.
-                </div>
-
-                <div style="display: flex; gap: 8px; margin-top: 4px;">
-                    <button onclick="openExhibitModal('GettyImages-1319962802.jpg.avif', 'BAB EL-MANDEB STRAIT & PERIM ISLAND SATELLITE VIEW')" class="sarkha-link-btn" style="border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);">
-                        <i class="fa-solid fa-earth-africa"></i> [BAB EL-MANDEB SATELLITE VIEW]
-                    </button>
-                </div>`,
+                content: '<div class="intel-block amber"><strong>July 2026 Shipping Embargo:</strong> Houthis declared an embargo on Saudi-linked commercial shipping following military escalation around Sana’a International Airport.</div><div class="intel-block warning"><strong>September 2026 Coastal Offensive:</strong> Ansar Allah launched a rapid coastal drive, seizing Mokha port and Perim Island while advancing toward Dhubab in the Bab el-Mandeb strait.</div><div class="intel-block"><strong>October 2026 Counteroffensive & Fluid Control:</strong> Saudi-backed forces reported recapturing Dhubab (Oct 5), maintaining a highly fluid tactical frontline along the Red Sea coast.</div><div class="intel-block purple"><strong>Long-Range Strategic Claims:</strong> <a href="javascript:void(0)" onclick="openVideoModal(\'08dG8eDzmQk\', \'RIYADH AIRPORT & RABIGH STRIKES\')" style="color: #ff2a5f; font-weight: 800; text-decoration: underline;">Claimed Missile Strikes</a> on King Khalid International Airport (Riyadh) and Rabigh Oil Refinery.</div><div style="display: flex; gap: 8px; margin-top: 4px;"><button onclick="openExhibitModal(\'GettyImages-1319962802.jpg.avif\', \'BAB EL-MANDEB STRAIT & PERIM ISLAND SATELLITE VIEW\')" class="sarkha-link-btn" style="border-color: #00f0ff; color: #00f0ff; background: rgba(0,240,255,0.08);"><i class="fa-solid fa-earth-africa"></i> [BAB EL-MANDEB SATELLITE VIEW]</button></div>',
                 coords: [16.5, 43.5], zoom: 7,
                 markers: [
                     { lat: 15.3694, lng: 44.1910, type: "flame", label: "SANAA: LAUNCH VECTOR TO RIYADH" },
@@ -963,25 +780,7 @@
                 title: "The Human Cost: World's Worst Famine Crisis",
                 subtitle: "UN OCHA DOSSIER // FAMINE, CHOLERA & INFRASTRUCTURE COLLAPSE",
                 video: "",
-                content: `
-                <div style="display: flex; gap: 8px;">
-                    <button onclick="openExhibitModal('e28a6b_ead80ccf40b44885a4615ddc761a03f8~mv2.png.avif', 'YEMENI CHILDREN PRAYING FOR FOOD / FAMINE CRISIS')" class="sarkha-link-btn" style="flex: 1; border-color: #ff2a5f; color: #ff2a5f; background: rgba(255, 42, 95, 0.12);">
-                        <i class="fa-solid fa-hand-holding-heart"></i> [FAMINE & FOOD CRISIS]
-                    </button>
-                    <button onclick="openExhibitModal('cq5dam.thumbnail.cropped.1500.844.jpeg', 'YEMENI HOSPITALS & MALNUTRITION WARD')" class="sarkha-link-btn" style="flex: 1; border-color: #ffb703; color: #ffb703; background: rgba(255, 183, 3, 0.12);">
-                        <i class="fa-solid fa-hospital"></i> [HEALTH SYSTEM COLLAPSE]
-                    </button>
-                </div>
-
-                <div class="intel-block warning">
-                    <strong>21.6+ Million in Need:</strong> Over 80% of Yemen's total population requires immediate humanitarian assistance and food aid (UN OCHA).
-                </div>
-                <div class="intel-block amber">
-                    <strong>Severe Child Malnutrition:</strong> Port blockades of Hodeidah, currency collapse, and destroyed farmland created widespread severe famine affecting millions of children.
-                </div>
-                <div class="intel-block">
-                    <strong>Health System Collapse:</strong> Largest cholera outbreak in modern history (>2.5M cases) due to destroyed water treatment plants and bombed medical infrastructure.
-                </div>`,
+                content: '<div style="display: flex; gap: 8px;"><button onclick="openExhibitModal(\'e28a6b_ead80ccf40b44885a4615ddc761a03f8~mv2.png.avif\', \'YEMENI CHILDREN PRAYING FOR FOOD / FAMINE CRISIS\')" class="sarkha-link-btn" style="flex: 1; border-color: #ff2a5f; color: #ff2a5f; background: rgba(255, 42, 95, 0.12);"><i class="fa-solid fa-hand-holding-heart"></i> [FAMINE & FOOD CRISIS]</button><button onclick="openExhibitModal(\'cq5dam.thumbnail.cropped.1500.844.jpeg\', \'YEMENI HOSPITALS & MALNUTRITION WARD\')" class="sarkha-link-btn" style="flex: 1; border-color: #ffb703; color: #ffb703; background: rgba(255, 183, 3, 0.12);"><i class="fa-solid fa-hospital"></i> [HEALTH SYSTEM COLLAPSE]</button></div><div class="intel-block warning"><strong>21.6+ Million in Need:</strong> Over 80% of Yemen\'s total population requires immediate humanitarian assistance and food aid (UN OCHA).</div><div class="intel-block amber"><strong>Severe Child Malnutrition:</strong> Port blockades of Hodeidah, currency collapse, and destroyed farmland created widespread severe famine affecting millions of children.</div><div class="intel-block"><strong>Health System Collapse:</strong> Largest cholera outbreak in modern history (>2.5M cases) due to destroyed water treatment plants and bombed medical infrastructure.</div>',
                 coords: [15.5, 47.0], zoom: 6,
                 markers: [
                     { lat: 15.3694, lng: 44.1910, type: "flame", label: "SANAA: HUMANITARIAN AID DISTRIBUTION HUB" },
@@ -994,55 +793,19 @@
                 title: "References, Academic Sources & Acknowledgments",
                 subtitle: "BIBLIOGRAPHY, MEDIA ARCHIVES & AI ASSISTANCE",
                 video: "",
-                content: `
-                <div class="intel-block">
-                    <strong>Academic Bibliography & Research Texts:</strong>
-                    <ul style="margin-left: 18px; margin-top: 6px; line-height: 1.6;">
-                        <li><strong>Milani, M.:</strong> <i>Power and Deterrence: Iran's Rise and Its Geostrategic Realities</i> (Chapter 7).</li>
-                        <li><strong>Phillips, C.:</strong> <i>Battleground: 10 Conflicts that Explain the New Middle East</i> (Chapter 3).</li>
-                        <li><strong>Rogerson, B.:</strong> <i>The House Divided: Sunni, Shia and the Making of the Middle East</i>.</li>
-                    </ul>
-                </div>
-
-                <div class="intel-block warning">
-                    <strong>Primary Outlets & Media Archives:</strong>
-                    <ul style="margin-left: 18px; margin-top: 6px; line-height: 1.6;">
-                        <li><strong>Primary Sources:</strong> Official Houthi (Ansar Allah) Statements & Media Outlets.</li>
-                        <li><strong>News Networks & Video:</strong> Al Jazeera Media Network, YouTube Video Exhibits & Getty Images.</li>
-                        <li><strong>Search Engine & Information Retrieval:</strong> Google Search & Google Earth Services.</li>
-                    </ul>
-                </div>
-
-                <div class="intel-block amber">
-                    <strong>Cartographic Archives & Basemaps:</strong>
-                    <ul style="margin-left: 18px; margin-top: 6px; line-height: 1.6;">
-                        <li><strong>CIA Historical Maps:</strong> Perry-Castañeda Library Map Collection (University of Texas at Austin).</li>
-                        <li><strong>Spatial GIS Layers:</strong> Esri World Dark Gray Canvas & Public Domain Country GeoJSON.</li>
-                    </ul>
-                </div>
-
-                <div class="intel-block purple">
-                    <strong>AI Educational Development:</strong>
-                    This interactive map presentation and GEOINT dossier framework were structured, curated, and coded with the assistance of <strong>Artificial Intelligence (AI)</strong>.
-                </div>
-
-                <div style="margin-top: 6px;">
-                    <button onclick="openSpecialShortModal('54LB4IwMwmQ', 'DO NOT PRESS')" class="sarkha-link-btn" style="border-color: #ff2a5f; color: #ff2a5f; background: rgba(255, 42, 95, 0.15); font-weight: 800; letter-spacing: 2px;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> [DO NOT PRESS]
-                    </button>
-                </div>`,
+                content: '<div class="intel-block"><strong>Academic Bibliography & Research Texts:</strong><ul style="margin-left: 18px; margin-top: 6px; line-height: 1.6;"><li><strong>Milani, M.:</strong> <i>Power and Deterrence: Iran\'s Rise and Its Geostrategic Realities</i> (Chapter 7).</li><li><strong>Phillips, C.:</strong> <i>Battleground: 10 Conflicts that Explain the New Middle East</i> (Chapter 3).</li><li><strong>Rogerson, B.:</strong> <i>The House Divided: Sunni, Shia and the Making of the Middle East</i>.</li></ul></div><div class="intel-block warning"><strong>Primary Outlets & Media Archives:</strong><ul style="margin-left: 18px; margin-top: 6px; line-height: 1.6;"><li><strong>Primary Sources:</strong> Official Houthi (Ansar Allah) Statements & Media Outlets.</li><li><strong>News Networks & Video:</strong> Al Jazeera Media Network, YouTube Video Exhibits & Getty Images.</li><li><strong>Search Engine & Information Retrieval:</strong> Google Search & Google Earth Services.</li></ul></div><div class="intel-block amber"><strong>Cartographic Archives & Basemaps:</strong><ul style="margin-left: 18px; margin-top: 6px; line-height: 1.6;"><li><strong>CIA Historical Maps:</strong> Perry-Castañeda Library Map Collection (University of Texas at Austin).</li><li><strong>Spatial GIS Layers:</strong> Esri World Dark Gray Canvas & Public Domain Country GeoJSON.</li></ul></div><div class="intel-block purple"><strong>AI Educational Development:</strong> This interactive map presentation and GEOINT dossier framework were structured, curated, and coded with the assistance of <strong>Artificial Intelligence (AI)</strong>.</div><div style="margin-top: 6px;"><button onclick="openSpecialShortModal(\'54LB4IwMwmQ\', \'DO NOT PRESS\')" class="sarkha-link-btn" style="border-color: #ff2a5f; color: #ff2a5f; background: rgba(255, 42, 95, 0.15); font-weight: 800; letter-spacing: 2px;"><i class="fa-solid fa-triangle-exclamation"></i> [DO NOT PRESS]</button></div>',
                 coords: [15.3694, 44.1910], zoom: 5,
                 markers: [],
                 lines: []
             }
         ];
 
-        let currentSlide = 0;
-        let activeMarkersLayer = L.layerGroup().addTo(map);
-        let activeLinesLayer = L.layerGroup().addTo(map);
+        var currentSlide = 0;
+        var activeMarkersLayer = L.layerGroup().addTo(map);
+        var activeLinesLayer = L.layerGroup().addTo(map);
 
         function updateSlide(index) {
-            const slide = slides[index];
+            var slide = slides[index];
 
             map.flyTo(slide.coords, slide.zoom, { 
                 duration: 1.6, 
@@ -1056,14 +819,14 @@
             document.getElementById('slideContent').innerHTML = slide.content;
             document.getElementById('slideCounter').innerText = (index + 1 < 10 ? '0' : '') + (index + 1) + ' / ' + (slides.length < 10 ? '0' : '') + slides.length;
             
-            const prevBtn = document.getElementById('prevBtn');
+            var prevBtn = document.getElementById('prevBtn');
             if (index === 0) {
                 prevBtn.style.visibility = 'hidden';
             } else {
                 prevBtn.style.visibility = 'visible';
             }
 
-            const videoBox = document.getElementById('videoBox');
+            var videoBox = document.getElementById('videoBox');
             if (slide.video && slide.video.trim() !== "") {
                 videoBox.style.display = 'block';
                 videoBox.innerHTML = slide.video;
@@ -1074,7 +837,7 @@
 
             closeCiaMap();
 
-            const progressPercent = ((index + 1) / slides.length) * 100;
+            var progressPercent = ((index + 1) / slides.length) * 100;
             document.getElementById('progressBar').style.width = progressPercent + '%';
 
             activeMarkersLayer.clearLayers();
@@ -1082,7 +845,7 @@
 
             if (slide.lines) {
                 slide.lines.forEach(function(l) {
-                    const polyline = L.polyline(l.coords, {
+                    var polyline = L.polyline(l.coords, {
                         className: l.colorClass,
                         weight: 3.5,
                         opacity: 0.95
@@ -1092,11 +855,11 @@
             }
 
             slide.markers.forEach(function(m) {
-                let icon;
+                var icon;
                 if (m.type === 'flame') {
                     icon = L.divIcon({ className: '', html: '<i class="fa-solid fa-fire flame-marker"></i>', iconSize: [32, 32], iconAnchor: [16, 16] });
                 } else if (m.type === 'flag') {
-                    const fallback = m.fallbackImg ? 'onerror="this.src=\'' + m.fallbackImg + '\';"' : '';
+                    var fallback = m.fallbackImg ? 'onerror="this.src=\'' + m.fallbackImg + '\';"' : '';
                     icon = L.divIcon({ 
                         className: '', 
                         html: '<img src="' + m.img + '" class="flag-avatar" alt="Flag" ' + fallback + '>', 
@@ -1112,7 +875,7 @@
                     });
                 }
 
-                const marker = L.marker([m.lat, m.lng], { icon: icon });
+                var marker = L.marker([m.lat, m.lng], { icon: icon });
                 if (m.label) {
                     marker.bindTooltip(m.label, { permanent: true, direction: 'right', offset: [15, 0], className: 'city-label' });
                 }
