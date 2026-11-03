@@ -563,29 +563,54 @@
             document.getElementById('videoModal').style.display = 'flex';
         }
 
-        let ytSpecialPlayer = null;
+                let ytSpecialPlayer = null;
 
         function openSpecialShortModal(youtubeId, titleText) {
+            // 1. Reset overlay e imposta il titolo
             document.getElementById('thankYouOverlay').style.display = 'none';
-            document.getElementById('videoModalTitle').innerHTML = `<i class="fa-solid fa-circle-play"></i> ${titleText}`;
+            document.getElementById('videoModalTitle').innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${titleText}`;
+            
+            // 2. Assegna l'URL del video all'iframe
+            const iframe = document.getElementById('videoModalIframe');
+            iframe.src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1&enablejsapi=1";
+            
+            // 3. Mostra subito la finestra modale
             document.getElementById('videoModal').style.display = 'flex';
 
-            const iframe = document.getElementById('videoModalIframe');
-            iframe.src = `https://www.youtube-nocookie.com/embed/${youtubeId}?enablejsapi=1&autoplay=1`;
-
-            if (ytSpecialPlayer) {
-                try { ytSpecialPlayer.destroy(); } catch(e){}
-            }
-
-            setTimeout(() => {
-                ytSpecialPlayer = new YT.Player('videoModalIframe', {
-                    events: {
-                        'onStateChange': function(event) {
-                            if (event.data === 0) {
-                                document.getElementById('thankYouOverlay').style.display = 'flex';
+            // 4. Inizializza il controllo di fine video in modo protetto
+            if (typeof YT !== 'undefined' && YT && YT.Player) {
+                if (ytSpecialPlayer) {
+                    try { ytSpecialPlayer.destroy(); } catch(e){}
+                }
+                setTimeout(() => {
+                    try {
+                        ytSpecialPlayer = new YT.Player('videoModalIframe', {
+                            events: {
+                                'onStateChange': function(event) {
+                                    if (event.data === 0) { // 0 = Video terminato
+                                        document.getElementById('thankYouOverlay').style.display = 'flex';
+                                    }
+                                }
                             }
-                        }
+                        });
+                    } catch(err) {
+                        console.log("Fallback attivo per YT Player");
                     }
+                }, 500);
+            }
+        }
+
+        function closeVideoModal(e) {
+            if (!e || e.target.id === 'videoModal' || e.target.tagName === 'BUTTON') {
+                document.getElementById('videoModalIframe').src = "";
+                document.getElementById('thankYouOverlay').style.display = 'none';
+                document.getElementById('videoModal').style.display = 'none';
+                if (ytSpecialPlayer) {
+                    try { ytSpecialPlayer.destroy(); } catch(e){}
+                }
+            }
+        }
+
                 });
             }, 500);
         }
