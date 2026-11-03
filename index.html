@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GEOINT DOSSIER: ANSAR ALLAH & RED SEA CRISIS</title>
     
+    <!-- YouTube Iframe API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+
     <!-- Leaflet CSS & FontAwesome Icons -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -409,7 +412,7 @@
         </div>
     </div>
 
-    <!-- UNIVERSAL VIDEO / SHORTS POP-UP MODAL -->
+    <!-- UNIVERSAL VIDEO / SHORTS POP-UP MODAL WITH OVERLAY -->
     <div id="videoModal" class="generic-modal" onclick="closeVideoModal(event)">
         <div class="generic-modal-content" onclick="event.stopPropagation()" style="max-width: 540px; border-color: #ff2a5f; box-shadow: 0 0 40px rgba(255, 42, 95, 0.4);">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,42,95,0.4); padding-bottom: 10px; margin-bottom: 15px;">
@@ -418,8 +421,14 @@
                 </span>
                 <button onclick="closeVideoModal()" style="background: none; border: none; color: #ff2a5f; font-size: 22px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 800;">[X]</button>
             </div>
-            <div style="width: 100%; height: 510px; border-radius: 6px; overflow: hidden; border: 1.5px solid #ff2a5f; background: #000;">
+            <div style="width: 100%; height: 510px; border-radius: 6px; overflow: hidden; border: 1.5px solid #ff2a5f; background: #000; position: relative;">
                 <iframe id="videoModalIframe" src="" style="width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                
+                <!-- AUTOMATIC OVERLAY AT VIDEO END -->
+                <div id="thankYouOverlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(4, 7, 13, 0.96); color: #00f0ff; font-family: 'Space Grotesk', sans-serif; font-size: 42px; font-weight: 800; letter-spacing: 4px; align-items: center; justify-content: center; flex-direction: column; z-index: 10; text-shadow: 0 0 20px #00f0ff, 0 0 40px #00f0ff;">
+                    <div>THANK YOU</div>
+                    <div style="font-size: 13px; font-family: 'JetBrains Mono', monospace; color: #ff2a5f; margin-top: 12px; letter-spacing: 2px;">[ END OF PRESENTATION ]</div>
+                </div>
             </div>
         </div>
     </div>
@@ -548,15 +557,47 @@
         }
 
         function openVideoModal(youtubeId, titleText) {
-            document.getElementById('videoModalIframe').src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1";
+            document.getElementById('thankYouOverlay').style.display = 'none';
+            document.getElementById('videoModalIframe').src = "https://www.youtube-nocookie.com/embed/" + youtubeId + "?autoplay=1";
             document.getElementById('videoModalTitle').innerHTML = `<i class="fa-solid fa-circle-play"></i> ${titleText}`;
             document.getElementById('videoModal').style.display = 'flex';
+        }
+
+        let ytSpecialPlayer = null;
+
+        function openSpecialShortModal(youtubeId, titleText) {
+            document.getElementById('thankYouOverlay').style.display = 'none';
+            document.getElementById('videoModalTitle').innerHTML = `<i class="fa-solid fa-circle-play"></i> ${titleText}`;
+            document.getElementById('videoModal').style.display = 'flex';
+
+            const iframe = document.getElementById('videoModalIframe');
+            iframe.src = `https://www.youtube-nocookie.com/embed/${youtubeId}?enablejsapi=1&autoplay=1`;
+
+            if (ytSpecialPlayer) {
+                try { ytSpecialPlayer.destroy(); } catch(e){}
+            }
+
+            setTimeout(() => {
+                ytSpecialPlayer = new YT.Player('videoModalIframe', {
+                    events: {
+                        'onStateChange': function(event) {
+                            if (event.data === 0) {
+                                document.getElementById('thankYouOverlay').style.display = 'flex';
+                            }
+                        }
+                    }
+                });
+            }, 500);
         }
 
         function closeVideoModal(e) {
             if (!e || e.target.id === 'videoModal' || e.target.tagName === 'BUTTON') {
                 document.getElementById('videoModalIframe').src = "";
+                document.getElementById('thankYouOverlay').style.display = 'none';
                 document.getElementById('videoModal').style.display = 'none';
+                if (ytSpecialPlayer) {
+                    try { ytSpecialPlayer.destroy(); } catch(e){}
+                }
             }
         }
 
@@ -783,7 +824,7 @@
                 phase: "PHASE 06 // MARITIME INTERDICTION",
                 title: "Bab el-Mandeb Strategy & Galaxy Leader Hijacking",
                 subtitle: "CHOKEPOINT: BAB EL-MANDEB [12.58° N, 43.33° E]",
-                video: `<iframe src="https://www.youtube.com/embed/vbB2tQLdJiE" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`,
+                video: `<iframe src="https://www.youtube-nocookie.com/embed/vbB2tQLdJiE" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`,
                 content: `
                 <div class="intel-block warning">
                     <strong>Chokepoint Leverage (The Why):</strong> Bab el-Mandeb handles 12%–15% of global trade. Blocking this 18-mile strait weaponizes global maritime shipping to force a Gaza ceasefire and project regional power.
@@ -801,7 +842,7 @@
             {
                 phase: "PHASE 07 // AXIS OF RESISTANCE",
                 title: "The Axis of Resistance & Regional Alliances",
-                subtitle: "TEHRAN - SANAA - BEIRUT - BAGHDAD - DAMASCUS",
+                subtitle: "TEHRAN - SANAA - BEIRUT - BAGHDAD - GAZA",
                 video: "",
                 content: `
                 <div class="intel-block purple">
@@ -813,7 +854,7 @@
                         <div class="flag-chip"><img src="sarkha_banner.jpg" alt="Houthi Slogan"> HOUTHIS (ANSAR ALLAH)</div>
                         <div class="flag-chip"><img src="https://upload.wikimedia.org/wikipedia/commons/2/23/Flag_of_Hezbollah.svg" alt="Hezbollah" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/8/89/Flag_of_Yemen.svg';"> HEZBOLLAH</div>
                         <div class="flag-chip"><img src="https://upload.wikimedia.org/wikipedia/commons/f/f6/Flag_of_Iraq.svg" alt="Iraq"> IRAQI MILITIAS</div>
-<div class="flag-chip"><img src="hamas.webp" alt="Hamas"> HAMAS</div>
+                        <div class="flag-chip"><img src="hamas.png" alt="Hamas" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/0/00/Flag_of_Palestine.svg';"> HAMAS</div>
                     </div>
                 </div>
 
@@ -963,7 +1004,7 @@
                 ],
                 lines: []
             },
-                       {
+            {
                 phase: "PHASE 12 // SOURCES & METHODOLOGY",
                 title: "References, Academic Sources & Acknowledgments",
                 subtitle: "BIBLIOGRAPHY, MEDIA ARCHIVES & AI ASSISTANCE",
@@ -1030,7 +1071,6 @@
             document.getElementById('slideContent').innerHTML = slide.content;
             document.getElementById('slideCounter').innerText = `${index + 1 < 10 ? '0' : ''}${index + 1} / ${slides.length < 10 ? '0' : ''}${slides.length}`;
             
-            // Hide PREV button on first slide
             const prevBtn = document.getElementById('prevBtn');
             if (index === 0) {
                 prevBtn.style.visibility = 'hidden';
@@ -1047,7 +1087,6 @@
                 videoBox.innerHTML = '';
             }
 
-            // Always close CIA map viewer when switching slides
             closeCiaMap();
 
             const progressPercent = ((index + 1) / slides.length) * 100;
