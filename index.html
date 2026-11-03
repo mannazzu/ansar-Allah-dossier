@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GEOINT DOSSIER: ANSAR ALLAH & RED SEA CRISIS</title>
-    
-    <!-- YouTube Iframe API -->
-    <script src="https://www.youtube.com/iframe_api"></script>
 
     <!-- Leaflet CSS & FontAwesome Icons -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -412,7 +409,7 @@
         </div>
     </div>
 
-        <!-- POP-UP MODAL CON PLAYER VIDEO HTML5 LOCALE -->
+    <!-- UNIVERSAL VIDEO POP-UP MODAL WITH THANK YOU OVERLAY -->
     <div id="videoModal" class="generic-modal" onclick="closeVideoModal(event)">
         <div class="generic-modal-content" onclick="event.stopPropagation()" style="max-width: 540px; border-color: #ff2a5f; box-shadow: 0 0 40px rgba(255, 42, 95, 0.4);">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,42,95,0.4); padding-bottom: 10px; margin-bottom: 15px;">
@@ -422,14 +419,8 @@
                 <button onclick="closeVideoModal()" style="background: none; border: none; color: #ff2a5f; font-size: 22px; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 800;">[X]</button>
             </div>
             <div style="width: 100%; height: 510px; border-radius: 6px; overflow: hidden; border: 1.5px solid #ff2a5f; background: #000; position: relative;">
+                <iframe id="videoModalIframe" src="" style="width: 100%; height: 100%; border: none;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 
-                <!-- LETTORE VIDEO MP4 NATIVO -->
-                <video id="localVideoPlayer" style="width: 100%; height: 100%; object-fit: contain;" controls playsinline>
-                    <source src="closing_video.mp4" type="video/mp4">
-                    Il browser non supporta il riproduttore video.
-                </video>
-
-                <!-- OVERLAY THANK YOU A FINE RIPRODUZIONE -->
                 <div id="thankYouOverlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(4, 7, 13, 0.96); color: #00f0ff; font-family: 'Space Grotesk', sans-serif; font-size: 42px; font-weight: 800; letter-spacing: 4px; align-items: center; justify-content: center; flex-direction: column; z-index: 10; text-shadow: 0 0 20px #00f0ff, 0 0 40px #00f0ff;">
                     <div>THANK YOU</div>
                     <div style="font-size: 13px; font-family: 'JetBrains Mono', monospace; color: #ff2a5f; margin-top: 12px; letter-spacing: 2px;">[ END OF PRESENTATION ]</div>
@@ -438,7 +429,7 @@
         </div>
     </div>
 
-    <!-- CIA MAP VIEWER (MANUAL HUD TOGGLE) -->
+    <!-- CIA MAP VIEWER -->
     <div id="intelViewer" class="intel-map-viewer">
         <div class="intel-map-header">
             <span id="intelViewerTitle"><i class="fa-solid fa-map-location-dot"></i> CIA HISTORICAL MAP ATTACHMENT</span>
@@ -551,7 +542,7 @@
 
         function openExhibitModal(imgFile, titleText) {
             document.getElementById('exhibitModalImg').src = imgFile;
-            document.getElementById('exhibitModalTitle').innerHTML = `<i class="fa-solid fa-image"></i> ${titleText}`;
+            document.getElementById('exhibitModalTitle').innerHTML = '<i class="fa-solid fa-image"></i> ' + titleText;
             document.getElementById('exhibitModal').style.display = 'flex';
         }
 
@@ -561,45 +552,29 @@
             }
         }
 
-                      function openSpecialShortModal(youtubeId, titleText) {
-            const overlay = document.getElementById('thankYouOverlay');
-            if (overlay) overlay.style.display = 'none';
-
-            const modal = document.getElementById('videoModal');
-            const video = document.getElementById('localVideoPlayer');
-
-            if (modal) modal.style.display = 'flex';
-
-            if (video) {
-                video.currentTime = 0;
-                video.play().catch(err => console.log("Autoplay bloccato:", err));
-
-                // Rileva la fine del video MP4 e mostra l'overlay "THANK YOU"
-                video.onended = function() {
-                    if (overlay) overlay.style.display = 'flex';
-                };
-            }
+        function openVideoModal(youtubeId, titleText) {
+            document.getElementById('thankYouOverlay').style.display = 'none';
+            document.getElementById('videoModalIframe').src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1";
+            document.getElementById('videoModalTitle').innerHTML = '<i class="fa-solid fa-circle-play"></i> ' + titleText;
+            document.getElementById('videoModal').style.display = 'flex';
         }
 
-        function closeVideoModal(e) {
-            if (!e || e.target.id === 'videoModal' || e.target.tagName === 'BUTTON') {
-                const video = document.getElementById('localVideoPlayer');
-                if (video) {
-                    video.pause();
-                    video.currentTime = 0;
+        let shortTimer = null;
+
+        function openSpecialShortModal(youtubeId, titleText) {
+            document.getElementById('thankYouOverlay').style.display = 'none';
+            document.getElementById('videoModalTitle').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ' + titleText;
+            
+            const iframe = document.getElementById('videoModalIframe');
+            iframe.src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1";
+            document.getElementById('videoModal').style.display = 'flex';
+
+            if (shortTimer) clearTimeout(shortTimer);
+            shortTimer = setTimeout(function() {
+                if (document.getElementById('videoModal').style.display === 'flex') {
+                    document.getElementById('thankYouOverlay').style.display = 'flex';
                 }
-                const overlay = document.getElementById('thankYouOverlay');
-                if (overlay) overlay.style.display = 'none';
-
-                const modal = document.getElementById('videoModal');
-                if (modal) modal.style.display = 'none';
-            }
-        }
-
-        }
-
-                });
-            }, 500);
+            }, 18000);
         }
 
         function closeVideoModal(e) {
@@ -607,15 +582,13 @@
                 document.getElementById('videoModalIframe').src = "";
                 document.getElementById('thankYouOverlay').style.display = 'none';
                 document.getElementById('videoModal').style.display = 'none';
-                if (ytSpecialPlayer) {
-                    try { ytSpecialPlayer.destroy(); } catch(e){}
-                }
+                if (shortTimer) clearTimeout(shortTimer);
             }
         }
 
         function openCiaMap(imgSrc, titleText) {
             document.getElementById('intelMapImg').src = imgSrc;
-            document.getElementById('intelViewerTitle').innerHTML = `<i class="fa-solid fa-map-location-dot"></i> ${titleText}`;
+            document.getElementById('intelViewerTitle').innerHTML = '<i class="fa-solid fa-map-location-dot"></i> ' + titleText;
             document.getElementById('intelViewer').style.display = 'flex';
         }
 
@@ -655,7 +628,7 @@
                 video: "", 
                 content: `
                 <div style="display: flex; align-items: center; gap: 12px; background: rgba(0,240,255,0.08); padding: 10px; border-radius: 5px; border-left: 4px solid #00f0ff;">
-                    <img src="hussein.jpg" style="width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid #00f0ff; object-fit: cover;" alt="Hussein al-Houthi" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Abdul-Malik_al-Houthi.jpg/220px-Abdul-Malik_al-Houthi.jpg';">
+                    <img src="hussein.jpg" style="width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid #00f0ff; object-fit: cover;" alt="Hussein al-Houthi">
                     <div>
                         <strong style="color: #00f0ff; font-size: 13.5px; display: block;">HUSSEIN BADREDDIN AL-HOUTHI</strong>
                         <span style="font-size: 11px; color: #a0aec0; font-family: 'JetBrains Mono', monospace;">Founder of Believing Youth (Killed 2004)</span>
@@ -836,7 +809,7 @@
                 phase: "PHASE 06 // MARITIME INTERDICTION",
                 title: "Bab el-Mandeb Strategy & Galaxy Leader Hijacking",
                 subtitle: "CHOKEPOINT: BAB EL-MANDEB [12.58° N, 43.33° E]",
-                video: `<iframe src="https://www.youtube-nocookie.com/embed/vbB2tQLdJiE" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`,
+                video: `<iframe src="https://www.youtube.com/embed/vbB2tQLdJiE" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`,
                 content: `
                 <div class="intel-block warning">
                     <strong>Chokepoint Leverage (The Why):</strong> Bab el-Mandeb handles 12%–15% of global trade. Blocking this 18-mile strait weaponizes global maritime shipping to force a Gaza ceasefire and project regional power.
@@ -1081,7 +1054,7 @@
             document.getElementById('slideTitle').innerText = slide.title;
             document.getElementById('slideSubtitle').innerText = slide.subtitle;
             document.getElementById('slideContent').innerHTML = slide.content;
-            document.getElementById('slideCounter').innerText = `${index + 1 < 10 ? '0' : ''}${index + 1} / ${slides.length < 10 ? '0' : ''}${slides.length}`;
+            document.getElementById('slideCounter').innerText = (index + 1 < 10 ? '0' : '') + (index + 1) + ' / ' + (slides.length < 10 ? '0' : '') + slides.length;
             
             const prevBtn = document.getElementById('prevBtn');
             if (index === 0) {
@@ -1102,13 +1075,13 @@
             closeCiaMap();
 
             const progressPercent = ((index + 1) / slides.length) * 100;
-            document.getElementById('progressBar').style.width = `${progressPercent}%`;
+            document.getElementById('progressBar').style.width = progressPercent + '%';
 
             activeMarkersLayer.clearLayers();
             activeLinesLayer.clearLayers();
 
             if (slide.lines) {
-                slide.lines.forEach(l => {
+                slide.lines.forEach(function(l) {
                     const polyline = L.polyline(l.coords, {
                         className: l.colorClass,
                         weight: 3.5,
@@ -1118,22 +1091,22 @@
                 });
             }
 
-            slide.markers.forEach(m => {
+            slide.markers.forEach(function(m) {
                 let icon;
                 if (m.type === 'flame') {
-                    icon = L.divIcon({ className: '', html: `<i class="fa-solid fa-fire flame-marker"></i>`, iconSize: [32, 32], iconAnchor: [16, 16] });
+                    icon = L.divIcon({ className: '', html: '<i class="fa-solid fa-fire flame-marker"></i>', iconSize: [32, 32], iconAnchor: [16, 16] });
                 } else if (m.type === 'flag') {
-                    const fallback = m.fallbackImg ? `onerror="this.src='${m.fallbackImg}';"` : '';
+                    const fallback = m.fallbackImg ? 'onerror="this.src=\'' + m.fallbackImg + '\';"' : '';
                     icon = L.divIcon({ 
                         className: '', 
-                        html: `<img src="${m.img}" class="flag-avatar" alt="Flag" ${fallback}>`, 
+                        html: '<img src="' + m.img + '" class="flag-avatar" alt="Flag" ' + fallback + '>', 
                         iconSize: [50, 32], 
                         iconAnchor: [25, 16] 
                     });
                 } else {
                     icon = L.divIcon({ 
                         className: '', 
-                        html: `<img src="${m.img}" class="leader-avatar" alt="Leader" onerror="this.outerHTML='<div class=\\'leader-avatar-fallback\\'><i class=\\'fa-solid fa-user-shield\\'></i></div>';">`, 
+                        html: '<img src="' + m.img + '" class="leader-avatar" alt="Leader" onerror="this.style.display=\'none\';">', 
                         iconSize: [52, 52], 
                         iconAnchor: [26, 26] 
                     });
@@ -1150,7 +1123,7 @@
         function nextSlide() { if (currentSlide < slides.length - 1) { currentSlide++; updateSlide(currentSlide); } }
         function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlide(currentSlide); } }
 
-        document.addEventListener('keydown', e => {
+        document.addEventListener('keydown', function(e) {
             if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
             if (e.key === 'ArrowLeft') prevSlide();
             if (e.key === 'Escape') {
